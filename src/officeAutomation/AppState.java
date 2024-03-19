@@ -1,5 +1,7 @@
 package officeAutomation;
 
+import java.security.spec.InvalidKeySpecException;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -26,6 +28,7 @@ public class AppState {
 	final int HEIGHT = 1800;
 
 	private static AppState singleInstance = null;
+	private EventHandler eventHandler = new EventHandler();
 	
 	ArrayList<Map<String, Node>> sceneNodesMapList;
 	ArrayList<Scene> scenes;
@@ -104,6 +107,8 @@ public class AppState {
 	}
 	
 	public Node getNode(int i, String id) {
+		printNodes();
+		System.out.printf("i: %d, id: %s\n", i, id);
 		return sceneNodesMapList.get(i).get(id);
 	}
 	
@@ -149,14 +154,73 @@ public class AppState {
         addNodesAtIndex(index, titleLabel, greetings, firstnameField, lastnameField, dateOfBirth, passFieldOne, passFieldTwo, signUpButton);
         
         // setup event handlers last
-        EventHandler handler = new EventHandler();
         signUpButton.setOnAction(e -> {
         	try {
-        		handler.handleSignUp();
+        		eventHandler.handleSignUp();
 			} catch (Exception e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
         });
+	}
+	
+	private class EventHandler {
+		public void handleSignUp() throws Exception {
+			String passFieldOne = ((PasswordField) getNode("passFieldOne")).getText();
+			String passFieldTwo = ((PasswordField) getNode("passFieldTwo")).getText();
+			String firstname = ((TextField) getNode("firstnameField")).getText();
+			String lastname = ((TextField) getNode("lastnameField")).getText();
+			String dateOfBirth = ((TextField) getNode("dateOfBirth")).getText();
+			int[] dateTuple;
+
+			try {
+				dateTuple = parseInputtedDate(dateOfBirth);		
+			}
+			catch(Exception e) {
+				System.out.println(e.toString());
+				return;
+			}
+
+
+			if (passFieldOne.equals(passFieldTwo)) {
+				// create account
+				try {
+					Patient newPatient = new Patient(firstname, lastname, dateTuple[0], dateTuple[1], dateTuple[2], passFieldOne);
+					newPatient.save(passFieldOne, false);
+				} catch (InvalidKeySpecException e) {
+					System.out.println("Error: could not create new user");
+					System.out.println(e.toString());
+				}
+				return;
+			}
+			
+			// else output an error 
+			System.out.println("Sorry your passwords do not match");
+		}
+		
+		private int[] parseInputtedDate(String text) {
+			int[] dateTuple = {0, 0, 0}; // year, month, day
+
+			String[] delimited = text.split("/");
+			if (delimited.length != 3) {
+				System.out.println("please use the correct date format when inputting the date (mm/dd/yyyy)");
+				return dateTuple;
+			}
+
+			int day, month, year;
+			try {
+				day = Integer.parseInt(delimited[1]);
+				month = Integer.parseInt(delimited[0]);
+				year = Integer.parseInt(delimited[2]);		
+			}
+			catch (Exception e) {
+				throw e;
+			}
+
+			dateTuple[0] = year;
+			dateTuple[1] = month;
+			dateTuple[2] = day;
+			return dateTuple;
+		}	
 	}
 }
