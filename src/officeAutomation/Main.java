@@ -13,7 +13,6 @@ public class Main extends Application {
 	@Override
 	public void start(Stage primaryStage) throws Exception {
 		appState.setPrimaryStage(primaryStage);
-		appState.setupSignUpScene();
         primaryStage.setScene(appState.getCurrentScene());
         primaryStage.show();
 	}

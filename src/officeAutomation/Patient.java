@@ -3,21 +3,19 @@ package officeAutomation;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Base64.Encoder;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Random;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
-import java.text.DateFormat;
 
 import org.json.simple.*;
 import org.json.simple.parser.JSONParser;
@@ -28,29 +26,32 @@ public class Patient {
 	String patientUniqueID;
 	String email;
 	String accountHash;
-	Date dateOfBirth;
+	PatientDate dateOfBirth;
 	int phoneNumber;
 	int age;
 	ArrayList<PatientRecord> records;
 	// TODO: Doctor currentDoctor;
-	
-	Patient(String fn, String ln, int a, int year, int month, int day) {
+	private final static String stringSecretKey = "programSecretKey";
+	private final static String stringSalt = "programSecretSalt";
+
+	Patient(String fn, String ln, int a, PatientDate date) {
 		firstname = fn;
 		lastname = ln;
-		createUniqueID();
 		age = a;
+		dateOfBirth = date;
+		phoneNumber = 0;
+		email = "none listed";
 		
-		// set the date of birth
-		Calendar cal = Calendar.getInstance();
-		cal.set(year + 1900, month, day);
-		dateOfBirth = cal.getTime();
+		// note: unique id MUST be created AFTER the dateOfBirth is set.
+		// this method depends on dateOfBirth not being null
+		createUniqueID();
 	}
 	
 	// used for creating a new Patient ONLY, that is why the password is passed in so the accountHash can be initialized
-	Patient(String fn, String ln, int year, int month, int day, String password) throws InvalidKeySpecException {
+	Patient(String fn, String ln, PatientDate date, String password) throws InvalidKeySpecException, NoSuchAlgorithmException {
 		firstname = fn;
 		lastname = ln;
-		createUniqueID();
+		dateOfBirth = date;
 		
 		// initialize the accountHash
 		SecurityHandler handler = SecurityHandler.getHandler();
@@ -62,22 +63,33 @@ public class Patient {
 			System.out.println(result.orElse().throwError());
 		}
 		
-		// set the date of birth
-		Calendar cal = Calendar.getInstance();
-		cal.set(year + 1900, month, day);
-		dateOfBirth = cal.getTime();
-		
+		// note: unique id MUST be created AFTER the dateOfBirth is set.
+		// this method depends on dateOfBirth not being null
+		createUniqueID();
+
 		records = new ArrayList<PatientRecord>();
 		phoneNumber = 0;
 		email = "none listed";
 	}
 	
-	Patient(String patientID, String password, boolean isMedicalStaff) {
+	Patient(String patientID, String password, boolean isMedicalStaff) throws Exception {
+		// read file
+		String path = "./src/officeAutomation/ApplicationData/metadata.json";
+		String jsonText = Files.readString(Paths.get(path), StandardCharsets.UTF_8);
+		
+		// parse json and get user's saved accountHash to authenticate the user
+		JSONParser parser = new JSONParser();
+		JSONObject json = (JSONObject) parser.parse(jsonText);
+		accountHash = (String) json.get(patientID);
 		try {
 			loadPatientDataFromFile(patientID, password, isMedicalStaff);
 		} catch (Exception e) {
-			e.printStackTrace();
+			throw e;
 		}
+	}
+	
+	Patient() {
+		// default constructor only exists to initialize a patient variable as a placeholder
 	}
 	
 	// 
@@ -96,6 +108,11 @@ public class Patient {
 	}
 	
 	public boolean userIsAuthentic(String password) throws InvalidKeySpecException {
+		if (accountHash == null) {
+			// cannot authenticate if user is not loaded
+			return false;
+		}
+
 		// hash the password
 		SecurityHandler handler = SecurityHandler.getHandler();
 		AppResult<String> passHashResult = handler.getPasswordHash(password);
@@ -104,7 +121,7 @@ public class Patient {
 			return false;
 		}
 		passHash = passHashResult.andThen();
-
+		
 		// compare it against the saved hash
 		return passHash.equals(accountHash);
 	}
@@ -122,13 +139,11 @@ public class Patient {
 		json.put("firstname", firstname);
 		json.put("lastname", lastname);
 		json.put("patientUniqueID", patientUniqueID);
-		json.put("email", email);
-		json.put("phoneNumber", phoneNumber);
-
-		DateFormat formatter = DateFormat.getDateInstance(DateFormat.DEFAULT);
-		json.put("dateOfBirth", formatter.format(dateOfBirth));
-
-		json.put("age", age);
+		json.put("email", email == null ? "" : email);
+		json.put("accountHash", accountHash);
+		json.put("phoneNumber", String.format("%d", phoneNumber));
+		json.put("dateOfBirth", dateOfBirth.toString());
+		json.put("age", String.format("%d", age));
 
 		JSONObject recordsJson = new JSONObject();
 		if (!records.isEmpty()) {
@@ -150,25 +165,40 @@ public class Patient {
 		String jsonText = json.toString();
 		
 		// encrypt json text
-		//SecretKeySpec keyspec = new SecretKeySpec(password.getBytes(), "AES");
-		SecretKey keyspec = KeyGenerator.getInstance("AES").generateKey();
-		String encryptedText = crypto(jsonText, keyspec, Cipher.ENCRYPT_MODE);
+		String encryptedText = SecurityHandler.encrypt(jsonText, stringSecretKey, stringSalt);
 		
 		// write to file
 		Path filepath = Paths.get(String.format("./src/officeAutomation/ApplicationData/%s.json", patientUniqueID));
 		Files.write(filepath, encryptedText.getBytes());
+		
+		// save the accountHash in a non encrypted file so we can load the account again later
+		saveAccountHash();
 	}
 	
-	// the patient ID needs to be passed in because this method will be called when the user is signing and the stored ID will not be decrypted yet
+	@SuppressWarnings("unchecked")
+	public void saveAccountHash() throws IOException {
+		JSONObject json = new JSONObject();
+		json.put(patientUniqueID, accountHash);
+
+		String jsonText = json.toString();
+		Path filepath = Paths.get("./src/officeAutomation/ApplicationData/metadata.json");
+		Files.write(filepath, jsonText.getBytes());
+	}
+	
+	// the patient ID needs to be passed in because this method will be called when the user is signing in and the stored ID will not be decrypted yet
 	// TODO: figure out a way to authenticate the password
 	public void loadPatientDataFromFile(String patientID, String password, boolean isMedicalStaff) throws Exception {
+		if (!userIsAuthentic(password)) {
+			// TODO: present error to user
+			throw new Exception("Incorrect Password, cannot sign in");
+		}
+
 		// read file
-		String path = String.format("./ApplicationData/%s.json", patientID);
+		String path = String.format("./src/officeAutomation/ApplicationData/%s.json", patientID);
 		String encryptedText = Files.readString(Paths.get(path), StandardCharsets.UTF_8);
 		
 		// decrypt data
-		SecretKeySpec keyspec = new SecretKeySpec(password.getBytes(), "AES");
-		String decryptedText = crypto(encryptedText, keyspec, Cipher.DECRYPT_MODE);
+		String decryptedText = SecurityHandler.decrypt(encryptedText, stringSecretKey, stringSalt);
 		
 		// parse decrypted json
 		JSONParser parser = new JSONParser();
@@ -177,14 +207,16 @@ public class Patient {
 		// load data into object
 		firstname = (String) json.get("firstname");
 		lastname = (String) json.get("lastname");
-		patientUniqueID = (String) json.get("patientUnqiueID");
+		patientUniqueID = (String) json.get("patientUniqueID");
 		email = (String) json.get("email");
-		phoneNumber = (int) json.get("phoneNumber");
+		accountHash = (String) json.get("accountHash");
+		//phoneNumber = Integer.parseInt((String) json.get("phoneNumber"));
 		
-		DateFormat formatter = DateFormat.getDateInstance(DateFormat.DEFAULT);
-		dateOfBirth = (Date) formatter.parse((String) json.get("dateOfBirth"));
+		String dateStr = (String) json.get("dateOfBirth");
+		dateOfBirth = new PatientDate(dateStr);
 
-		age = (int) json.get("age");
+		//age = Integer.parseInt((String) json.get("age"));
+		
 		// load records
 		JSONObject recordObject = (JSONObject) json.get("records");
 		//String[] keys = {"age", "weightInPounds", "bodyTemp", "pulseRate", "respirationRate", "systollicPressure", "diastollicPressure"};
@@ -208,26 +240,6 @@ public class Patient {
 		}
 	}
 	
-	// depending on the opmode, will either decrypt or encrypt the text
-	// opmode options: Cipher.ENCRYPT_MODE, Cipher.DECRYPT_MODE
-	public static String crypto(String text, SecretKey key, int opmode) throws Exception {
-		Cipher cipher = Cipher.getInstance("AES");
-		byte[] textBytes = text.getBytes();
-		cipher.init(opmode, key);
-		byte[] bytes = cipher.doFinal(textBytes);
-
-		switch (opmode) {
-		case Cipher.ENCRYPT_MODE:
-			Encoder encoder = Base64.getEncoder();
-			String cryptoText = encoder.encodeToString(bytes);
-			return cryptoText;
-		case Cipher.DECRYPT_MODE:
-			return new String(bytes);
-		default:
-			return "";
-		}
-	}
-	
 	// 
 	// MARK: Utility Methods
 	//
@@ -237,21 +249,32 @@ public class Patient {
 		if (patientUniqueID != null) {
 			return;
 		}
-
-		// we want each random number in the unique id to be at least 4 digits
-		Random rand = new Random();
-		int max = 9999;
-		int min = 1000;
+		int numberTag = dateOfBirth.day + dateOfBirth.month + dateOfBirth.year;
 
 		// create id buffer to build the id
 		StringBuilder buffer = new StringBuilder();
 		buffer.append(firstname);
-		buffer.append(rand.nextInt(max - min + 1) + min);
 		buffer.append(lastname);
-		buffer.append(rand.nextInt(max - min + 1) + min);	 
+		buffer.append(numberTag);	 
 		
 		// set the unique ID
 		patientUniqueID = buffer.toString();
+	}
+	
+	public String toString() {
+		StringBuilder buff = new StringBuilder();
+		
+		buff.append("-----------------------\n");
+		buff.append(String.format("firstname: %s\n", firstname));
+		buff.append(String.format("lastname: %s\n", lastname));
+		buff.append(String.format("patientUniqueID: %s\n", patientUniqueID));
+		buff.append(String.format("email: %s\n", email));
+		buff.append(String.format("accountHash: %s\n", accountHash));
+		buff.append(String.format("dateOfBirth: %s\n", dateOfBirth.toString()));
+		buff.append(String.format("phoneNumber: %d\n", phoneNumber));
+		buff.append(String.format("age: %d\n", age));
+		buff.append("-----------------------\n");
+		return buff.toString();
 	}
 	
 	//
