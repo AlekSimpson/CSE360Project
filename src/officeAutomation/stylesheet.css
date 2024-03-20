@@ -1,0 +1,54 @@
+/*
+
+COLOR HEX CODE REFERENCE:
+	dark blue (text, outlines): #22385B
+	medium blue: #ACCFEB
+	light blue: #DBF2FE
+	white: #ffffff
+	dark red (for notifs): #B23B2D
+	light red (for notifs): #CD6C60
+	
+TODO:
+	figure out how to change placeholder text color
+	fiddle w/ textbox & button sizes & proportions w/ regards to whole window size
+	figure out how to change the background color
+	get it to continue working when you move to another scene (currently breaks when you leave the login/signup screen from what i can tell)
+	center buttons
+	fiddle w colors to make it ~pretty~
+	
+	
+
+OTHER NOTES:
+	yeehaw
+
+*/
+
+.button {
+	/* main box */
+    -fx-background-color: linear-gradient(#ACCFEB, #DBF2FE);
+    -fx-background-radius: 30;
+    -fx-background-insets: 0;
+    -fx-text-fill: #22385B;
+    
+    /* borders */
+    -fx-border-color: #22385B;
+    -fx-border-width: 2;
+    -fx-border-radius: 30; 
+}
+
+.text-field {
+	/* main box */
+	-fx-background-color: linear-gradient(to top right, #DBF2FE, #ffffff);
+    -fx-background-radius: 0;
+    -fx-background-insets: 0;
+    -fx-text-fill: #22385B;
+    -fx-placeholder-fill: black;	/* this isn't working yet but im too tired to figure it out rn, will do in morning lol */
+    
+    -fx-border-color: #22385B;
+    -fx-border-width: 2;
+}
+
+.label {
+	-fx-text-fill: red;		/* temporary for testing styling on multiple screens sry for hurting ur eyes teehee*/
+}
+

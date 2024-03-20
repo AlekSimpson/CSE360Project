@@ -91,6 +91,7 @@ public class AppState {
 	}
 	
 	public Scene getCurrentScene() {
+		scenes.get(currentSceneID).getStylesheets().add("//src/officeAutomation/stylesheet.css");
 		return scenes.get(currentSceneID);
 	}
 	
