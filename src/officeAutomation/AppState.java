@@ -14,6 +14,7 @@ import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.text.*;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.StackPane;
@@ -91,7 +92,6 @@ public class AppState {
 	}
 	
 	public Scene getCurrentScene() {
-		scenes.get(currentSceneID).getStylesheets().add("//src/officeAutomation/stylesheet.css");
 		return scenes.get(currentSceneID);
 	}
 	
@@ -140,6 +140,10 @@ public class AppState {
 		
 		root.getChildren().add(mainStack);
 		addNodes(index, titleLabel);
+		
+		// import stylesheets
+		root.getStylesheets().add("//src/officeAutomation/stylesheets/styling.css");
+		root.getStylesheets().add("//src/officeAutomation/stylesheets/styling_mainpage.css");
 	}
 	
 	static void setupLoginScene() {
@@ -149,33 +153,54 @@ public class AppState {
 		Label titleLabel = new Label("Sign In");
 		titleLabel.setId("titleLabel");
 		
-		TextField fullnameField = new TextField("Fullname (Firstname Lastname)");
+		TextField fullnameField = new TextField("Full name (Firstname Lastname)");
 		fullnameField.setId("fullnameField");
+		fullnameField.setFont(Font.font("Helvetica", 14));
 		TextField birthdayField = new TextField("mm/dd/yyyy");
 		birthdayField.setId("birthdayField");
+		birthdayField.setFont(Font.font("Helvetica", 14));
 		PasswordField passwordField = new PasswordField();
 		passwordField.setId("passwordField");
+		passwordField.setFont(Font.font("Helvetica", 14));
 
 		Button loginButton = new Button();
 		loginButton.setId("loginButton");
+		loginButton.setFont(Font.font("Helvetica", 20));
 		loginButton.setText("Login");
+		loginButton.setMaxWidth(WIDTH * 0.15);
+		
+		Text signUpPrompt = new Text("Don't have an account?");
+		signUpPrompt.setId("signUpPrompt");
+		signUpPrompt.setFont(Font.font("Helvetica", 14));
 
 		Button signUpButton = new Button();
 		signUpButton.setId("signUpButton");
-		signUpButton.setText("Sign Up");
+		signUpButton.setFont(Font.font("Helvetica", FontWeight.BOLD, 24));
+		signUpButton.setText("Sign Up!");
+		signUpButton.setMaxWidth(WIDTH * 0.2);
 		
 		// setup input fields
 		fullnameField.setPromptText("Username");
 		passwordField.setPromptText("Password");
 		
 		// title label setup
-		titleLabel.setFont(Font.font("Helvetica", FontWeight.BOLD, 30));
-		titleLabel.setPadding(new Insets(100, 0, 0, 0));
+		titleLabel.setFont(Font.font("Helvetica", FontWeight.BOLD, 40));
+		titleLabel.setPadding(new Insets(80, 0, 0, 0));
 		
-		VBox bodyStack = new VBox(20, fullnameField, birthdayField, passwordField, loginButton, signUpButton);
-		bodyStack.setMaxWidth(WIDTH * 0.3);
+		VBox loginStack = new VBox(20, fullnameField, birthdayField, passwordField, loginButton);
+		loginStack.setId("loginStack");
+		loginStack.setAlignment(Pos.TOP_CENTER);
 		
-		VBox mainStack = new VBox(200, titleLabel, bodyStack);
+		VBox signUpStack = new VBox(20, signUpPrompt, signUpButton);
+		signUpStack.setId("signupStack");
+		signUpStack.setAlignment(Pos.TOP_CENTER);
+		
+		VBox bodyStack = new VBox(20, loginStack, signUpStack);
+		bodyStack.setId("bodyStack");
+		bodyStack.setMaxWidth(WIDTH * 0.4);
+		
+		VBox mainStack = new VBox(100, titleLabel, bodyStack);
+		mainStack.setId("mainStack");
 		mainStack.setAlignment(Pos.TOP_CENTER);
 		
 		root.getChildren().add(mainStack);
@@ -194,6 +219,10 @@ public class AppState {
 		signUpButton.setOnAction(e -> {
 			navigateToScene(AppScene.SignUpScene);
 		});
+		
+		// import stylesheets
+		root.getStylesheets().add("//src/officeAutomation/stylesheets/styling.css");
+		root.getStylesheets().add("//src/officeAutomation/stylesheets/styling_login.css");
 	}
 	
 	static void setupSignUpScene() {
@@ -203,7 +232,7 @@ public class AppState {
         // initialize main view elements
         Label titleLabel = new Label("Sign Up");
         titleLabel.setId("titleLabel");
-        Label greetings = new Label("Welcome, please create an account"); // Title
+        Label greetings = new Label("Welcome, please create an account:"); // Title
         greetings.setId("greetings");
         TextField firstnameField = new TextField("Firstname"); // first name field
         firstnameField.setId("firstnameField");
@@ -219,20 +248,31 @@ public class AppState {
         signUpButton.setId("signUpButton");
 
         // setup view elements
+        greetings.setFont(Font.font("Helvetica", 14));
+        firstnameField.setFont(Font.font("Helvetica", 14));
+        lastnameField.setFont(Font.font("Helvetica", 14));
+        dateOfBirth.setFont(Font.font("Helvetica", 14));
+        passFieldOne.setFont(Font.font("Helvetica", 14));
         passFieldOne.setPromptText("Password");
+        passFieldTwo.setFont(Font.font("Helvetica", 14));
         passFieldTwo.setPromptText("Confirm your password");
-        titleLabel.setFont(Font.font("Helvetica", FontWeight.BOLD, 30));
-        titleLabel.setPadding(new Insets(100, 0, 0, 0));
+        
+        titleLabel.setFont(Font.font("Helvetica", FontWeight.BOLD, 40));
+        titleLabel.setPadding(new Insets(80, 0, 0, 0));
 
         // setup sign up button
-    	signUpButton.setText("Sign Up");
+    	signUpButton.setFont(Font.font("Helvetica", FontWeight.BOLD, 24));
+    	signUpButton.setText("Sign Up!");
+    	signUpButton.setMaxWidth(WIDTH * 0.2);
 
-        
         VBox fieldStack = new VBox(20, greetings, firstnameField, lastnameField, dateOfBirth, passFieldOne, passFieldTwo, signUpButton);
-        fieldStack.setMaxWidth(WIDTH * 0.3);
+        fieldStack.setId("fieldStack");
+        fieldStack.setMaxWidth(WIDTH * 0.4);
+		fieldStack.setAlignment(Pos.TOP_CENTER);
         
-        VBox mainStack = new VBox(200, titleLabel, fieldStack);
+        VBox mainStack = new VBox(100, titleLabel, fieldStack);
         mainStack.setAlignment(Pos.TOP_CENTER);
+        mainStack.setId("mainStack");
         
         root.getChildren().add(mainStack);
         addNodes(index, titleLabel, greetings, firstnameField, lastnameField, dateOfBirth, passFieldOne, passFieldTwo, signUpButton);
@@ -246,6 +286,10 @@ public class AppState {
 				e1.printStackTrace();
 			}
         });
+        
+        // import stylesheets
+        root.getStylesheets().add("//src/officeAutomation/stylesheets/styling.css");
+        root.getStylesheets().add("//src/officeAutomation/stylesheets/styling_signup.css");
 	}
 
 	private class EventHandler {

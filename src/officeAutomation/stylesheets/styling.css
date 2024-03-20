@@ -16,16 +16,20 @@ TODO:
 	center buttons
 	fiddle w colors to make it ~pretty~
 	
-	
-
 OTHER NOTES:
 	yeehaw
 
 */
 
+.VBox {
+	-fx-background-color: blue;		/*to catch in testing when a box doesn't have a defined background color */
+	-fx-text-fill: red;
+}
+
+/* generic button */
 .button {
 	/* main box */
-    -fx-background-color: linear-gradient(#ACCFEB, #DBF2FE);
+    -fx-background-color: #ACCFEB;
     -fx-background-radius: 30;
     -fx-background-insets: 0;
     -fx-text-fill: #22385B;
@@ -36,19 +40,48 @@ OTHER NOTES:
     -fx-border-radius: 30; 
 }
 
+/* generic textField */
 .text-field {
 	/* main box */
-	-fx-background-color: linear-gradient(to top right, #DBF2FE, #ffffff);
-    -fx-background-radius: 0;
-    -fx-background-insets: 0;
+	-fx-background-color: linear-gradient(to top left, #DBF2FE, #ffffff);
+    -fx-background-radius: 10;
+    
+    -fx-border-width: 2;
+	-fx-border-radius: 10;
+    
     -fx-text-fill: #22385B;
     -fx-placeholder-fill: black;	/* this isn't working yet but im too tired to figure it out rn, will do in morning lol */
     
     -fx-border-color: #22385B;
     -fx-border-width: 2;
+    
+    -fx-height: 20;
 }
 
+/* generic label */
 .label {
-	-fx-text-fill: red;		/* temporary for testing styling on multiple screens sry for hurting ur eyes teehee*/
+	-fx-text-fill: #22385B;
 }
 
+/* generic passwordField; inherits from textField */
+.password-field {
+	-fx-prompt-text-fill: #5DA3DA;	
+}
+
+/* stacks */
+
+#mainStack{
+	-fx-background-color: #ACCFEB;
+}
+
+#bodyStack {
+	-fx-background-color: #DBF2FE;
+	-fx-background-radius: 10;
+	
+	-fx-border-color: linear-gradient(to top left, #22385B, #274370);
+	-fx-border-width: 1;
+	-fx-border-radius: 10;
+	
+	-fx-alignment: center ;
+	-fx-padding: 50;
+}
