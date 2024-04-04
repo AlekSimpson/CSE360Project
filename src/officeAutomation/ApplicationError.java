@@ -23,6 +23,7 @@ public class ApplicationError {
 		builder.append(errorName + ":");
 		builder.append("\n");
 		builder.append(errorMessage);
+		
 		return builder.toString();
 	}
 }

@@ -33,7 +33,6 @@ public class PatientDate {
 	private void parseInputtedDate(String text) throws Exception {
 		String[] delimited = text.split("/");
 		if (delimited.length != 3) {
-			System.out.println("please use the correct date format when inputting the date (mm/dd/yyyy)");
 			throw new Exception("please use the correct date format when inputting the date (mm/dd/yyyy)");
 		}
 

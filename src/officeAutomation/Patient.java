@@ -1,14 +1,6 @@
 package officeAutomation;
 
 import java.util.ArrayList;
-import java.util.Base64;
-import java.util.Base64.Encoder;
-
-import javax.crypto.Cipher;
-import javax.crypto.KeyGenerator;
-import javax.crypto.SecretKey;
-import javax.crypto.spec.SecretKeySpec;
-
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -19,39 +11,21 @@ import java.security.spec.InvalidKeySpecException;
 
 import org.json.simple.*;
 import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
-public class Patient {
-	String firstname;
-	String lastname;
-	String patientUniqueID;
-	String email;
-	String accountHash;
-	PatientDate dateOfBirth;
-	int phoneNumber;
-	int age;
-	ArrayList<PatientRecord> records;
-	// TODO: Doctor currentDoctor;
-	private final static String stringSecretKey = "programSecretKey";
-	private final static String stringSalt = "programSecretSalt";
+public class Patient extends Account {
+	ArrayList<Visit> visits;
+	MedicalStaff currentDoctor;
 
-	Patient(String fn, String ln, int a, PatientDate date) {
-		firstname = fn;
-		lastname = ln;
-		age = a;
-		dateOfBirth = date;
-		phoneNumber = 0;
-		email = "none listed";
+	public Patient(String fn, String ln, int a, PatientDate date) throws InvalidKeySpecException, IOException, ParseException {
+		super(fn, ln, "none listed", date, 0, a);
 		
-		// note: unique id MUST be created AFTER the dateOfBirth is set.
-		// this method depends on dateOfBirth not being null
-		createUniqueID();
+		visits = new ArrayList<Visit>();
 	}
 	
 	// used for creating a new Patient ONLY, that is why the password is passed in so the accountHash can be initialized
-	Patient(String fn, String ln, PatientDate date, String password) throws InvalidKeySpecException, NoSuchAlgorithmException {
-		firstname = fn;
-		lastname = ln;
-		dateOfBirth = date;
+	public Patient(String fn, String ln, PatientDate date, String password) throws InvalidKeySpecException, NoSuchAlgorithmException, IOException, ParseException {
+		super(fn, ln, "none listed", date, 0, 0);
 		
 		// initialize the accountHash
 		SecurityHandler handler = SecurityHandler.getHandler();
@@ -63,16 +37,11 @@ public class Patient {
 			System.out.println(result.orElse().throwError());
 		}
 		
-		// note: unique id MUST be created AFTER the dateOfBirth is set.
-		// this method depends on dateOfBirth not being null
-		createUniqueID();
-
-		records = new ArrayList<PatientRecord>();
-		phoneNumber = 0;
-		email = "none listed";
+		visits = new ArrayList<Visit>();
 	}
 	
-	Patient(String patientID, String password, boolean isMedicalStaff) throws Exception {
+	public Patient(String patientID, String password, boolean isMedicalStaff) throws Exception {
+		super();
 		// read file
 		String path = "./src/officeAutomation/ApplicationData/metadata.json";
 		String jsonText = Files.readString(Paths.get(path), StandardCharsets.UTF_8);
@@ -80,7 +49,8 @@ public class Patient {
 		// parse json and get user's saved accountHash to authenticate the user
 		JSONParser parser = new JSONParser();
 		JSONObject json = (JSONObject) parser.parse(jsonText);
-		accountHash = (String) json.get(patientID);
+		JSONObject patients = (JSONObject) json.get("patients");
+		accountHash = (String) patients.get(patientID);
 		try {
 			loadPatientDataFromFile(patientID, password, isMedicalStaff);
 		} catch (Exception e) {
@@ -88,21 +58,31 @@ public class Patient {
 		}
 	}
 	
-	Patient() {
+	public Patient(String uid, String hash) throws InvalidKeySpecException, IOException, ParseException {
+		super();
+
+		UID = uid;
+		accountHash = hash;
+		visits = new ArrayList<Visit>();
+	}
+	
+	public Patient() throws InvalidKeySpecException, IOException, ParseException {
 		// default constructor only exists to initialize a patient variable as a placeholder
+		super();
+		visits = new ArrayList<Visit>();
 	}
 	
 	// 
 	// MARK: Methods for Core functionality 
 	//
 
-	public AppResult<ArrayList<PatientRecord>> getPatientRecords(boolean isDoctorOrNurseAccess) {
-		AppResult<ArrayList<PatientRecord>> result;
-		result = new AppResult<ArrayList<PatientRecord>>(records, new ApplicationError());
+	public AppResult<ArrayList<Visit>> getVisits(boolean isDoctorOrNurseAccess) {
+		AppResult<ArrayList<Visit>> result;
+		result = new AppResult<ArrayList<Visit>>(visits, new ApplicationError());
 
 		if (age < 12 && isDoctorOrNurseAccess) {
 			ApplicationError err = new ApplicationError("Permission Denied", "You cannot access records of patient under the age of 12.");
-			result = new AppResult<ArrayList<PatientRecord>>(null, err);
+			result = new AppResult<ArrayList<Visit>>(null, err);
 		}
 		return result;
 	}
@@ -138,29 +118,29 @@ public class Patient {
 		JSONObject json = new JSONObject();
 		json.put("firstname", firstname);
 		json.put("lastname", lastname);
-		json.put("patientUniqueID", patientUniqueID);
+		json.put("UID", UID);
 		json.put("email", email == null ? "" : email);
 		json.put("accountHash", accountHash);
 		json.put("phoneNumber", String.format("%d", phoneNumber));
 		json.put("dateOfBirth", dateOfBirth.toString());
 		json.put("age", String.format("%d", age));
 
-		JSONObject recordsJson = new JSONObject();
-		if (!records.isEmpty()) {
+		JSONObject visitsJson = new JSONObject();
+		if (!visits.isEmpty()) {
 			int i = 0;
-			for (PatientRecord r : records) {
-				JSONObject recordJson = new JSONObject();
-				recordJson.put("age", r.age);
-				recordJson.put("bodyTemp", r.bodyTemp);
-				recordJson.put("pulseRate", r.pulseRate);
-				recordJson.put("respirationRate", r.respirationRate);
-				recordJson.put("systollicPressure", r.bloodPressure.systollicPressure);
-				recordJson.put("diastollicPressure", r.bloodPressure.diastollicPressure);
-				recordsJson.put(String.format("%d", i), recordJson);
+			for (Visit v : visits) {
+				JSONObject visitJson = new JSONObject();
+				visitJson.put("age", v.age);
+				visitJson.put("bodyTemp", v.bodyTemp);
+				visitJson.put("pulseRate", v.pulseRate);
+				visitJson.put("respirationRate", v.respirationRate);
+				visitJson.put("systollicPressure", v.bloodPressure.systollicPressure);
+				visitJson.put("diastollicPressure", v.bloodPressure.diastollicPressure);
+				visitsJson.put(String.format("%d", i), visitJson);
 				i++;
 			}		
 		}
-		json.put("records", recordsJson);
+		json.put("visits", visitsJson);
 		
 		String jsonText = json.toString();
 		
@@ -168,21 +148,11 @@ public class Patient {
 		String encryptedText = SecurityHandler.encrypt(jsonText, stringSecretKey, stringSalt);
 		
 		// write to file
-		Path filepath = Paths.get(String.format("./src/officeAutomation/ApplicationData/%s.json", patientUniqueID));
+		Path filepath = Paths.get(String.format("./src/officeAutomation/ApplicationData/%s.json", UID));
 		Files.write(filepath, encryptedText.getBytes());
 		
 		// save the accountHash in a non encrypted file so we can load the account again later
 		saveAccountHash();
-	}
-	
-	@SuppressWarnings("unchecked")
-	public void saveAccountHash() throws IOException {
-		JSONObject json = new JSONObject();
-		json.put(patientUniqueID, accountHash);
-
-		String jsonText = json.toString();
-		Path filepath = Paths.get("./src/officeAutomation/ApplicationData/metadata.json");
-		Files.write(filepath, jsonText.getBytes());
 	}
 	
 	// the patient ID needs to be passed in because this method will be called when the user is signing in and the stored ID will not be decrypted yet
@@ -192,6 +162,7 @@ public class Patient {
 			// TODO: present error to user
 			throw new Exception("Incorrect Password, cannot sign in");
 		}
+		currentDoctor = MedicalStaff.getInstance();
 
 		// read file
 		String path = String.format("./src/officeAutomation/ApplicationData/%s.json", patientID);
@@ -207,125 +178,42 @@ public class Patient {
 		// load data into object
 		firstname = (String) json.get("firstname");
 		lastname = (String) json.get("lastname");
-		patientUniqueID = (String) json.get("patientUniqueID");
+		UID = (String) json.get("UID");
 		email = (String) json.get("email");
 		accountHash = (String) json.get("accountHash");
-		//phoneNumber = Integer.parseInt((String) json.get("phoneNumber"));
+		phoneNumber = Integer.parseInt((String) json.get("phoneNumber"));
 		
 		String dateStr = (String) json.get("dateOfBirth");
 		dateOfBirth = new PatientDate(dateStr);
-
-		//age = Integer.parseInt((String) json.get("age"));
+		age = Integer.parseInt((String) json.get("age"));
 		
 		// load records
-		JSONObject recordObject = (JSONObject) json.get("records");
-		//String[] keys = {"age", "weightInPounds", "bodyTemp", "pulseRate", "respirationRate", "systollicPressure", "diastollicPressure"};
-		for (int i = 0; i < recordObject.size(); i++) {
-			JSONObject recElement = (JSONObject) recordObject.get(String.format("%d", i));
-			int age = (int) recElement.get("age");
-			double weightInPounds = (double) recElement.get("weightInPounds");
-			double bodyTemp = (double) recElement.get("bodyTemp");
-			int pulseRate = (int) recElement.get("pulseRate");
-			int respirationRate = (int) recElement.get("respirationRate");
-			int systollicPressure = (int) recElement.get("systollicPressure");
-			int diastollicPressure = (int) recElement.get("diastollicPressure");
-			PatientRecord pr = new PatientRecord(
+		JSONObject visitObject = (JSONObject) json.get("visits");
+		for (int i = 0; i < visitObject.size(); i++) {
+			JSONObject visElement = (JSONObject) visitObject.get(String.format("%d", i));
+			int age = (int) visElement.get("age");
+			double weightInPounds = (double) visElement.get("weightInPounds");
+			double bodyTemp = (double) visElement.get("bodyTemp");
+			int pulseRate = (int) visElement.get("pulseRate");
+			int respirationRate = (int) visElement.get("respirationRate");
+			int systollicPressure = (int) visElement.get("systollicPressure");
+			int diastollicPressure = (int) visElement.get("diastollicPressure");
+			Visit pr = new Visit(
 					age, weightInPounds,
 					bodyTemp, pulseRate,
 					respirationRate, systollicPressure,
 					diastollicPressure
 				);
-			records.add(pr);
+			visits.add(pr);
 			i++;
 		}
 	}
-	
-	// 
-	// MARK: Utility Methods
-	//
-	
-	private void createUniqueID() {
-		// we do not want to regenerate a unique ID if one already exists
-		if (patientUniqueID != null) {
-			return;
-		}
-		int numberTag = dateOfBirth.day + dateOfBirth.month + dateOfBirth.year;
 
-		// create id buffer to build the id
-		StringBuilder buffer = new StringBuilder();
-		buffer.append(firstname);
-		buffer.append(lastname);
-		buffer.append(numberTag);	 
-		
-		// set the unique ID
-		patientUniqueID = buffer.toString();
-	}
-	
-	public String toString() {
-		StringBuilder buff = new StringBuilder();
-		
-		buff.append("-----------------------\n");
-		buff.append(String.format("firstname: %s\n", firstname));
-		buff.append(String.format("lastname: %s\n", lastname));
-		buff.append(String.format("patientUniqueID: %s\n", patientUniqueID));
-		buff.append(String.format("email: %s\n", email));
-		buff.append(String.format("accountHash: %s\n", accountHash));
-		buff.append(String.format("dateOfBirth: %s\n", dateOfBirth.toString()));
-		buff.append(String.format("phoneNumber: %d\n", phoneNumber));
-		buff.append(String.format("age: %d\n", age));
-		buff.append("-----------------------\n");
-		return buff.toString();
-	}
-	
 	//
 	// MARK: GETTERS AND SETTERS
 	//
 	
-	public String getUniqueID() {
-		return patientUniqueID;
-	}
-	
-	public int getCurrentAge() {
-		return age;
-	}
-	
-	public void updateAge() {
-		age+=1;
-	}
-	
-	public void arbitrarilyUpdateAge(int newAge) {
-		age = newAge;
-	}
-
-	public void addRecord(PatientRecord pr) {
-		records.add(pr);
-	}
-	
-	public void setEmail(String e) {
-		email = e;
-	}
-	
-	public String getEmail() {
-		return email;
-	}
-	
-	public void setPhoneNumber(int pn) {
-		phoneNumber = pn;
-	}
-	
-	public int getPhoneNumber() {
-		return phoneNumber;
-	}
-	
-	public String getName() {
-		return String.format("%s %s", firstname, lastname);
-	}
-	
-	public String getFirstname() {
-		return firstname;
-	}
-	
-	public String getLastname() {
-		return lastname;
+	public void addVisit(Visit visit) {
+		visits.add(visit);
 	}
 }
