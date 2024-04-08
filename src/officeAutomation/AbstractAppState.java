@@ -1,13 +1,19 @@
 package officeAutomation;
 
+import java.io.IOException;
+import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.json.simple.parser.ParseException;
+
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
@@ -28,6 +34,7 @@ public class AbstractAppState {
 	static int currentSceneID;
 	int sceneAmount;
 	static Patient currentlyLoggedIn;
+	MedicalStaff staffAccount;
 	
 	protected AbstractAppState() {
 		eventHandler = new AppStateEventHandler();
@@ -42,6 +49,13 @@ public class AbstractAppState {
 			sceneRoots.add(root);
 			sceneNodesMapList.add(new HashMap<String, Node>());
 			scenes.add(new Scene(root, WIDTH, HEIGHT));
+		}
+
+		// initialize the medical staff
+		try {
+			staffAccount = MedicalStaff.getInstance();
+		} catch (InvalidKeySpecException | IOException | ParseException e) {
+			e.printStackTrace();
 		}
 	}
 	
@@ -135,6 +149,18 @@ public class AbstractAppState {
 	 */
 
 	protected class AppStateEventHandler {
+		public void handleMessageSend() throws Exception {
+			// TODO: clearError();
+			String recipientID = ((TextField) getNode("toField")).getText();
+			String messageSubject = ((TextField) getNode("subjectField")).getText();
+			String messageText = ((TextArea) getNode("composeBox")).getText();
+			
+			// TODO: check that id is valid
+			
+			// make and send the message
+			currentlyLoggedIn.sendMessage(recipientID, messageSubject, messageText);
+		}
+
 		public void handleLogin() throws Exception {
 			clearError();
 			String fullname = ((TextField) getNode("fullnameField")).getText();

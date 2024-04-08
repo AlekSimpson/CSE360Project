@@ -12,6 +12,8 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
+import javafx.scene.control.Button;
+
 public class Account {
 	protected final static String stringSecretKey = "programSecretKey";
 	protected final static String stringSalt = "programSecretSalt";
@@ -33,6 +35,7 @@ public class Account {
 		dateOfBirth = null;
 		phoneNumber = 0;
 		age = 0;
+		mailbox = new ArrayList<Message>();
 	}
 	
 	// for the medical staff class
@@ -43,6 +46,7 @@ public class Account {
 		dateOfBirth = null;
 		phoneNumber = pn;
 		UID = uid;
+		mailbox = new ArrayList<Message>();
 		
 		AppResult<String> result = SecurityHandler.getHandler().getPasswordHash("medstaffpassword");
 		if (result.isOk()) {
@@ -57,6 +61,7 @@ public class Account {
 		dateOfBirth = date;
 		phoneNumber = pn;
 		age = a;
+		mailbox = new ArrayList<Message>();
 		
 		createUniqueID();
 	}
@@ -172,6 +177,23 @@ public class Account {
 		String jsonText = rootObj.toString();
 		Path filepath = Paths.get("./src/officeAutomation/ApplicationData/metadata.json");
 		Files.write(filepath, jsonText.getBytes());
+	}
+	
+	Button[] getMailboxInboxItems() {
+		ArrayList<Button> inbox = new ArrayList<Button>();
+		Button inboxItem;
+		if (mailbox.isEmpty()) {
+			return new Button[0];
+		}
+
+		for (Message m : mailbox) {
+			inboxItem = new Button();
+			inboxItem.setId("");
+			inboxItem.setText(m.from);	
+			AppState.addNodes(AppState.currentSceneID, inboxItem);
+			inbox.add(inboxItem);
+		}
+		return (Button[])inbox.toArray();
 	}
 	
 	private void createUniqueID() {

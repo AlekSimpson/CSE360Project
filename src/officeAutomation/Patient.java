@@ -208,6 +208,11 @@ public class Patient extends Account {
 			i++;
 		}
 	}
+	
+	void sendMessage(String t, String subject, String m) {
+		String name  = firstname + " " + lastname;
+		Message.composeAndSendMessage(subject, t, "office", name, UID, m);
+	}
 
 	//
 	// MARK: GETTERS AND SETTERS

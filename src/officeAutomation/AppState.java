@@ -8,6 +8,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.PasswordField;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
@@ -33,6 +34,7 @@ public class AppState extends AbstractAppState {
 		setupVisitationLogScene();
 		setupMessagingPortalScene();
 		setupAccountInfoScene();
+		setupComposeNewMessageScene();
 	}
 	
 	public static synchronized AppState getInstance() {
@@ -47,6 +49,17 @@ public class AppState extends AbstractAppState {
 	 * Mark: Utility Methods
 	 * 
 	 */
+	
+	private static ListView<Button> listview(String id) {
+		//Button[] visitItemButtons = (Button[]) currentlyLoggedIn.getMailboxInboxItems().toArray();
+		ListView<Button> listview = new ListView<Button>();
+		//listview.getItems().addAll(visitItemButtons);
+		listview.setPrefSize(500, 500);
+		listview.setId(id);
+		addNodes(CURRENT_INDEX, listview);
+
+		return listview;
+	}
 
 	private static Button navigationButton(
 		String id, 
@@ -100,6 +113,15 @@ public class AppState extends AbstractAppState {
         return field;
 	}
 	
+	private static TextArea textarea(String id) {
+        TextArea field = new TextArea("Type here..."); // first name field
+        field.setPrefSize(500, 500);
+        field.setPrefRowCount(50);
+        field.setId(id);	
+        addNodes(CURRENT_INDEX, field);
+        return field;
+	}
+	
 	private static TextField textfield(
 		String placeholder, 
 		String id, 
@@ -122,10 +144,16 @@ public class AppState extends AbstractAppState {
 		return field;
 	}
 
+	@SuppressWarnings("unchecked")
 	private static HBox makeTopBar() {
 		Button homeButton = navigationButton("homeButton", "Home", AppScene.PatientMainViewScene);
 		Button visitsButton = navigationButton("visitsButton", "Visits", AppScene.VisitationLogScene);
-		Button messagesButton = navigationButton("messagesButton", "Messages", AppScene.MessagingPortalScene);
+		//Button messagesButton = navigationButton("messagesButton", "Messages", AppScene.MessagingPortalScene);
+		Button messagesButton = button("messagesButton", "Messages", e -> {
+			navigateToScene(AppScene.MessagingPortalScene);	
+			Button[] messagesViewMessageItems = currentlyLoggedIn.getMailboxInboxItems();
+			((ListView<Button>) sceneNodesMapList.get(currentSceneID).get("messagesView")).getItems().addAll(messagesViewMessageItems);
+		});
 		Button accountButton = navigationButton("accountButton", "Account", AppScene.AccountInfoScene);
 		Button logoutButton = button("logoutButton", "Logout", e -> {
 			currentlyLoggedIn = null;
@@ -198,12 +226,9 @@ public class AppState extends AbstractAppState {
 		HBox topBarStack = makeTopBar();
 		topBarStack.setAlignment(Pos.CENTER);
 		
-		Button[] visitItemButtons = {};
-		ListView<Button> messagesView = new ListView<Button>();
-		messagesView.getItems().addAll(visitItemButtons);
-		messagesView.setPrefSize(500, 500);
+		ListView<Button> messagesView = listview("messagesView");
 		
-		Button newMessageButton = button("newMessage", "New Message", e -> {});
+		Button newMessageButton = navigationButton("newMessage", "New Message", AppScene.ComposeNewMessageScene);
 		
 		HBox contentStack = new HBox(20, messagesView, newMessageButton);
 		contentStack.setAlignment(Pos.CENTER);
@@ -212,6 +237,50 @@ public class AppState extends AbstractAppState {
 		bodyStack.setAlignment(Pos.CENTER);
 		
 		VBox mainStack = new VBox(200, topBarStack, bodyStack);
+		mainStack.setAlignment(Pos.TOP_CENTER);
+		CURRENT_ROOT.getChildren().add(mainStack);
+	}
+	
+	static void setupComposeNewMessageScene() {
+		CURRENT_INDEX = AppScene.ComposeNewMessageScene.getValue();
+		CURRENT_ROOT = sceneRoots.get(CURRENT_INDEX);
+		
+		Label titleLabel = label("Compose...", Font.font("Helvetica", FontWeight.BOLD, 30));
+
+		Label toLabel = label("To: ", Font.font("Helvetica", FontWeight.BOLD, 30));
+		TextField toField = textfield("account id", "toField");
+		HBox toStack = new HBox(10, toLabel, toField);
+		toStack.setAlignment(Pos.CENTER);
+		
+		Label subjectLabel = label("Subject: ", Font.font("Helvetica", FontWeight.BOLD, 30));
+		TextField subjectField = textfield("", "subjectField");
+		HBox subjectStack = new HBox(10, subjectLabel, subjectField);
+		subjectStack.setAlignment(Pos.CENTER);
+
+		TextArea composeBox = textarea("composeBox");
+		
+		Button sendButton = button("sendButton", "Send", e -> {
+			try {
+				eventHandler.handleMessageSend();
+			}
+			catch (Exception ex) {
+				ex.printStackTrace();
+			}
+		});
+		Button deleteButton = button("deleteButton", "Delete", e -> {});
+		
+		HBox topBarStack = makeTopBar();
+		topBarStack.setAlignment(Pos.CENTER);
+
+		VBox composeStack = new VBox(10, toStack, subjectStack, composeBox);
+		composeStack.setAlignment(Pos.CENTER_LEFT);
+		VBox actionStack = new VBox(10, sendButton, deleteButton);
+		actionStack.setAlignment(Pos.CENTER);
+
+		HBox bodyStack = new HBox(10, composeStack, actionStack);
+		bodyStack.setAlignment(Pos.CENTER);
+		
+		VBox mainStack = new VBox(50, topBarStack, titleLabel, bodyStack);
 		mainStack.setAlignment(Pos.TOP_CENTER);
 		CURRENT_ROOT.getChildren().add(mainStack);
 	}

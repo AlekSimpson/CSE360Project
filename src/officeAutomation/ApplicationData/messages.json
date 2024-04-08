@@ -1,1 +1,15 @@
-{}
+{
+    "office": {
+        "184507": {
+            "toUID":"office",
+            "fromUID":"AlekSimpson2026",
+            "subject":"Hello World",
+            "messageChainIndex":0,
+            "from":"Alek Simpson",
+            "ID":"184507",
+            "to":"Doctor John",
+            "message":"This is a test message",
+            "isUnread":true
+        }
+    }
+}

@@ -20,13 +20,14 @@ public class Message {
 	String from;
 	String fromUID;
 	String message;
+	String subject;
 	private boolean isUnread;
-	private final static String messagesFilePath = "./src/officeAutomation/ApplicationData/metadata.json";
+	private final static String messagesFilePath = "./src/officeAutomation/ApplicationData/messages.json";
 	int messageChainIndex;
 	
 	private Message() {}
 	
-	private Message(String t, String tuid, String fr, String fuid, String m, int mci) {
+	Message(String sub, String t, String tuid, String fr, String fuid, String m, int mci) {
 		to = t;
 		from = fr;
 		message = m;	
@@ -36,12 +37,12 @@ public class Message {
 		
 		isUnread = true;
 		messageChainIndex = mci;
+		subject = sub;
 		generateID();
 	}
 	
 	public static ArrayList<Message> fromJSON(String accountID, String id) throws IOException, ParseException {
 		ArrayList<Message> messages = new ArrayList<Message>();
-		// Message m = new Message();
 		JSONParser parser = new JSONParser();
 		File messagesFile = new File(messagesFilePath);
 		String fileText = Files.readString(messagesFile.toPath());
@@ -62,6 +63,7 @@ public class Message {
 			currMessage.toUID = (String) currJson.get("toUID");
 			currMessage.from = (String) currJson.get("from");
 			currMessage.fromUID = (String) currJson.get("fromUID");
+			currMessage.subject = (String) currJson.get("subject");
 			currMessage.message = (String) currJson.get("message");
 			currMessage.isUnread = (boolean) currJson.get("isUnread");
 			currMessage.messageChainIndex = (int) currJson.get("messageChainIndex");
@@ -70,10 +72,11 @@ public class Message {
 		return messages;
 	}
 	
-	public Message composeAndSendMessage(String to, String tuid, String fr, String fuid, String mes) {
-		Message m = new Message(to, tuid, fr, fuid, mes, 0);
+	public static Message composeAndSendMessage(String sub, String to, String tuid, String fr, String fuid, String mes) {
+		Message m = new Message(sub, to, tuid, fr, fuid, mes, 0);
 		try {
 			m.sendMessage(false);
+			System.out.println("message sent");
 		} catch (IOException | ParseException e) {
 			e.printStackTrace();
 		}
@@ -81,7 +84,7 @@ public class Message {
 	}
 	
 	public Message reply(String message) {
-		Message m = new Message(from, fromUID, to, toUID, message, messageChainIndex + 1);
+		Message m = new Message("Re:" + subject, from, fromUID, to, toUID, message, messageChainIndex + 1);
 		try {
 			m.sendMessage(true);
 		} catch (IOException | ParseException e) {
@@ -105,6 +108,7 @@ public class Message {
 		messageObj.put("fromUID", fromUID);
 		messageObj.put("message", message);
 		messageObj.put("isUnread", isUnread);
+		messageObj.put("subject", subject);
 		messageObj.put("messageChainIndex", messageChainIndex);
 		
 		return messageObj;
@@ -147,9 +151,8 @@ public class Message {
 	
 	private void generateID() {
 		Random rand = new Random();
-		byte[] nullArray = new byte[15];
-		rand.nextBytes(nullArray);
-		String randomizedStringID = new String(nullArray, Charset.forName("UTF-8"));
+		int messageId = rand.nextInt(99999 - 10000) + 99999;
+		String randomizedStringID = Integer.toString(messageId);
 
 		ID = randomizedStringID;
 	}

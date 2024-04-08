@@ -20,7 +20,9 @@ public class MedicalStaff extends Account {
 	
 	private MedicalStaff() throws InvalidKeySpecException, IOException, ParseException { // nurse by default
 		// hardcoding the Office account because that won't change
-		super("Doctor's Office", "", "doctors@office.com", 6022100011L, "office");
+		//     firsntame,  ln,       email,              phone number,  uid)
+		super("Doctor's", "Office", "doctors@office.com", 6022100011L, "office"); 
+		// medical staff password: medstaffpassword 
 
 		patients = new HashMap<String, Patient>();
 		pharmaciesAddressed = new HashMap<String, Pharmacy>();
@@ -74,6 +76,20 @@ public class MedicalStaff extends Account {
 			delimitedPatient = patientString.split(":");
 			patients.put(delimitedPatient[0], new Patient(delimitedPatient[0], delimitedPatient[1]));
 		}
+	}
+	
+	public boolean authenticaLogin(String password) throws InvalidKeySpecException {
+		AppResult<String> result = SecurityHandler.getHandler().getPasswordHash(password);
+		if (result.isErr()) {
+			System.out.println("couldn't get inputted password hash");
+			return false;
+		}
+		String inputtedHash = result.andThen();
+		//String 
+		// TODO: NOT FINISHED, working on this today, should be finished by today (Apr 8, 1:13 PM) - Alek Simpson
+
+		
+		return false;
 	}
 	
 	public HashMap<String, Patient> getPatients() {
