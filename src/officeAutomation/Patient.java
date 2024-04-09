@@ -209,7 +209,8 @@ public class Patient extends Account {
 		}
 	}
 	
-	void sendMessage(String t, String subject, String m) {
+	@Override
+	public void sendMessage(String t, String subject, String m) {
 		String name  = firstname + " " + lastname;
 		Message.composeAndSendMessage(subject, t, "office", name, UID, m);
 	}

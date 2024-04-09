@@ -1,15 +1,1 @@
-{
-    "office": {
-        "184507": {
-            "toUID":"office",
-            "fromUID":"AlekSimpson2026",
-            "subject":"Hello World",
-            "messageChainIndex":0,
-            "from":"Alek Simpson",
-            "ID":"184507",
-            "to":"Doctor John",
-            "message":"This is a test message",
-            "isUnread":true
-        }
-    }
-}
+{"office":{"184507":{"toUID":"office","fromUID":"AlekSimpson2026","subject":"Hello World","messageChainIndex":"0","from":"Alek Simpson","ID":"184507","to":"Doctor John","message":"This is a test message","isUnread":true},"177601":{"toUID":"office","fromUID":"AlekSimpson2026","subject":"Another message","messageChainIndex":"0","from":"Alek Simpson","ID":"177601","to":"Doctor Joe","message":"test","isUnread":true},"123240":{"toUID":"office","fromUID":"AlekSimpson2026","subject":"Re: Re: Hello World","messageChainIndex":"0","from":"Alek Simpson","ID":"123240","to":"Doctor ___, office","message":"the third reply","isUnread":true}},"AlekSimpson2026":{"187977":{"toUID":"AlekSimpson2026","fromUID":"office","subject":"Re: Hello World","messageChainIndex":"0","from":"Doctor ___","ID":"187977","to":"Alek Simpson","message":"a reply to the message","isUnread":true}}}

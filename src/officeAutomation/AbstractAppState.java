@@ -12,6 +12,7 @@ import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
@@ -24,7 +25,7 @@ public class AbstractAppState {
 	final static int WIDTH = 1600;
 	final static int HEIGHT = 900;
 
-	protected static AppStateEventHandler eventHandler = null;
+	public static AppStateEventHandler eventHandler = null;
 	
 	static ArrayList<Map<String, Node>> sceneNodesMapList;
 	static ArrayList<Scene> scenes;
@@ -33,14 +34,15 @@ public class AbstractAppState {
 	static Stage primaryStage;
 	static int currentSceneID;
 	int sceneAmount;
-	static Patient currentlyLoggedIn;
+	static Account currentlyLoggedIn;
+	static Message focusedMessage;
 	MedicalStaff staffAccount;
 	
 	protected AbstractAppState() {
 		eventHandler = new AppStateEventHandler();
 		appIsRunning = true;
 		currentSceneID = AppScene.LoginScene.getValue();
-		sceneAmount = 9;
+		sceneAmount = AppScene.amount;
 		sceneNodesMapList = new ArrayList<Map<String, Node>>();
 		scenes = new ArrayList<Scene>();
 		sceneRoots = new ArrayList<StackPane>();
@@ -110,6 +112,11 @@ public class AbstractAppState {
 		return sceneNodesMapList.get(i).get(id);
 	}
 	
+	@SuppressWarnings("unchecked")
+	public static ListView<Button> getList(int i, String id) {
+		return (ListView<Button>) sceneNodesMapList.get(i).get(id);
+	}
+	
 	public void setLabelText(String id, String text) {
 		((Label) currAppNodes().get(id)).setText(text);
 	}
@@ -147,18 +154,41 @@ public class AbstractAppState {
 	 *	 This class is sort of like the "toolbox" for the apps scenes
 	 *	 to utilize when they receive the correct input
 	 */
+	
+	//public static class AppQuery<T> {
+	//	@SuppressWarnings("unchecked")
+	//	public T getNode(int i, String id) {
+	//		return (T) sceneNodesMapList.get(i).get(id);
+	//	}
+	//}
 
 	protected class AppStateEventHandler {
 		public void handleMessageSend() throws Exception {
 			// TODO: clearError();
-			String recipientID = ((TextField) getNode("toField")).getText();
+			String recipient = ((TextField) getNode("toField")).getText();
 			String messageSubject = ((TextField) getNode("subjectField")).getText();
 			String messageText = ((TextArea) getNode("composeBox")).getText();
 			
-			// TODO: check that id is valid
-			
 			// make and send the message
-			currentlyLoggedIn.sendMessage(recipientID, messageSubject, messageText);
+			if (currentlyLoggedIn.isMedStaff) {
+				// TODO: check that id is valid
+				System.out.println("recipient: " + recipient);
+				String[] delimited = recipient.split(", ");
+				System.out.println("delimited:");
+				System.out.printf("[0]: %s, [1]: %s\n", delimited[0], delimited[1]);
+				((MedicalStaff) currentlyLoggedIn).sendMessage(delimited[0], delimited[1], messageSubject, messageText);
+			}
+			else {
+				currentlyLoggedIn.sendMessage(recipient, messageSubject, messageText);			
+			}
+		}
+		
+		public void handleMessageReply() throws Exception {
+			// TODO: clearError();
+			navigateToScene(AppScene.ComposeNewMessageScene);
+			
+			((TextField) getNode("toField")).setText(focusedMessage.from + ", " + focusedMessage.fromUID);
+			((TextField) getNode("subjectField")).setText("Re: " + focusedMessage.subject);
 		}
 
 		public void handleLogin() throws Exception {
@@ -166,6 +196,13 @@ public class AbstractAppState {
 			String fullname = ((TextField) getNode("fullnameField")).getText();
 			String birthdayRawText = ((TextField) getNode("birthdayField")).getText();
 			String password = ((PasswordField) getNode("passwordField")).getText();
+			
+			// check if the user signing is signing into the staff side of the app
+			if (fullname.equals("Doctor's Office") && staffAccount.authenticaLogin(password)) {
+				loginSuccess(staffAccount, AppScene.DoctorMainViewScene); // log the user in
+				return;
+			}
+			
 			PatientDate date = new PatientDate();
 			try {
 				date = new PatientDate(birthdayRawText);
@@ -180,21 +217,39 @@ public class AbstractAppState {
 			String[] delimitedFullname = fullname.split(" ");
 			String puid = getUniqueID(delimitedFullname[0], delimitedFullname[1], date); // patient unique
 			
+			// otherwise they are a patient loggging into the patient side
 			Patient patientToLogin; 
 			try {
 				patientToLogin = new Patient(puid, password, false);			
-				currentlyLoggedIn = patientToLogin;
-				((TextField) getNode("fullnameField")).setText("Fullname (Firstname Lastname)");
-				((TextField) getNode("birthdayField")).setText("mm/dd/yyyy");
-				((TextField) getNode("passwordField")).setText("");
-				
-				navigateToScene(AppScene.PatientMainViewScene);
+				loginSuccess(patientToLogin, AppScene.PatientMainViewScene); // log the user in
 			}
 			catch (Exception e) {
 				ApplicationError err = new ApplicationError("Bad Password", "Please check that ALL your inputted credentials are correct");
 				displayError(err);
 				return;
 			}
+		}
+		
+		public void handleMessageButtonPressed(Message message) throws Exception {
+			navigateToScene(AppScene.ViewMessageDetailScene);
+			
+			focusedMessage = message;
+			
+			// set recipientLabel with message.to
+			((Label) getNode("fromField")).setText(message.from);
+			((Label) getNode("subjectField")).setText(message.subject);
+			// populate text area with message
+			((TextArea) getNode("composeBox")).setText(message.readMessage());
+		}
+		
+		public void handleMessageDelete() throws Exception {
+			((TextField) getNode("toField")).setText("");
+			((TextField) getNode("subjectField")).setText("");
+			((TextArea) getNode("composeBox")).setText("Type here...");	
+			
+			focusedMessage = null;
+
+			navigateToScene(AppScene.MessagingPortalScene);
 		}
 		
 		public void handleSignUp() throws Exception {
@@ -234,6 +289,15 @@ public class AbstractAppState {
 			// else output an error 
 			ApplicationError err = new ApplicationError("Bad Credentials", "Sorry your passwords do not match");
 			displayError(err);
+		}
+		
+		protected void loginSuccess(Account loggedIn, AppScene destScene) {
+			currentlyLoggedIn = loggedIn;
+			((TextField) getNode("fullnameField")).setText("Fullname (Firstname Lastname)");
+			((TextField) getNode("birthdayField")).setText("mm/dd/yyyy");
+			((TextField) getNode("passwordField")).setText("");
+			
+			navigateToScene(destScene);
 		}
 		
 		protected String getUniqueID(String firstname, String lastname, PatientDate date) {

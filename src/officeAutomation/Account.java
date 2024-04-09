@@ -27,6 +27,7 @@ public class Account {
 	long phoneNumber;
 	int age;
 	ArrayList<Message> mailbox;
+	public boolean isMedStaff;
 	
 	public Account() {
 		firstname = "";
@@ -36,6 +37,7 @@ public class Account {
 		phoneNumber = 0;
 		age = 0;
 		mailbox = new ArrayList<Message>();
+		isMedStaff = false;
 	}
 	
 	// for the medical staff class
@@ -47,6 +49,7 @@ public class Account {
 		phoneNumber = pn;
 		UID = uid;
 		mailbox = new ArrayList<Message>();
+		isMedStaff = true;
 		
 		AppResult<String> result = SecurityHandler.getHandler().getPasswordHash("medstaffpassword");
 		if (result.isOk()) {
@@ -62,6 +65,7 @@ public class Account {
 		phoneNumber = pn;
 		age = a;
 		mailbox = new ArrayList<Message>();
+		isMedStaff = false;
 		
 		createUniqueID();
 	}
@@ -81,7 +85,7 @@ public class Account {
 		buff.append("-----------------------\n");
 		return buff.toString();
 	}
-
+	
 	public void setEmail(String e) {
 		email = e;
 	}
@@ -136,8 +140,12 @@ public class Account {
 		JSONObject rootObj = (JSONObject) parser.parse(fileText);
 		
 		JSONObject userInbox = (JSONObject) rootObj.get(UID);
-		if (userInbox.isEmpty()) {
-			return false; // no mail to read
+		// check if there is mail to read
+		if (userInbox == null) {
+			return false;
+		}
+		else if (userInbox.isEmpty()) {
+			return false;
 		}
 		
 		String currKey;
@@ -147,7 +155,7 @@ public class Account {
 			payload = Message.fromJSON(UID, currKey);
 			mailbox.addAll(payload);
 		}
-
+		
 		return true; // found mail to read
 	}
 	
@@ -179,21 +187,52 @@ public class Account {
 		Files.write(filepath, jsonText.getBytes());
 	}
 	
-	Button[] getMailboxInboxItems() {
-		ArrayList<Button> inbox = new ArrayList<Button>();
-		Button inboxItem;
-		if (mailbox.isEmpty()) {
-			return new Button[0];
-		}
+	Button[] getMailboxInboxItems() throws Exception {
+		boolean mailFound;
+		try {
+			mailFound = readMailbox();
+			
+			if (!mailFound) {
+				System.out.println("did not find mail");
+				return new Button[0];
+			}
 
-		for (Message m : mailbox) {
-			inboxItem = new Button();
-			inboxItem.setId("");
-			inboxItem.setText(m.from);	
-			AppState.addNodes(AppState.currentSceneID, inboxItem);
-			inbox.add(inboxItem);
+			ArrayList<Button> inbox = new ArrayList<Button>();
+
+			Button inboxItem;
+			for (Message m : mailbox) {
+				inboxItem = new Button();
+				inboxItem.setId(String.valueOf(m.getID()));
+				inboxItem.setOnAction(e -> {
+					try {
+						AppState.eventHandler.handleMessageButtonPressed(m);
+					} catch (Exception e1) {
+						e1.printStackTrace();
+					}
+				});
+				String itemTitle = m.isUnread() 
+						? "Unread:\n" + "From: " + m.from + "\nTo: " + m.to + "\nSubject: " + m.subject 
+						: "From: " + m.from + "\nTo: " + m.to + "\nSubject: " + m.subject;
+				inboxItem.setText(itemTitle);	
+				AppState.addNodes(AppState.currentSceneID, inboxItem);
+				inbox.add(inboxItem);
+			}
+
+			Button[] buttonArr = new Button[inbox.size()];
+			for (int i = 0; i < inbox.size(); i++) {
+				buttonArr[i] = inbox.get(i);
+			}
+
+			return buttonArr;
+		} 
+		catch (IOException | ParseException e) {
+			throw e;
 		}
-		return (Button[])inbox.toArray();
+	}
+	
+	// function is meant to be overwritten
+	public void sendMessage(String recipient, String subject, String messageText) {
+		System.out.println("Please use an overrided version of this method");
 	}
 	
 	private void createUniqueID() {

@@ -8,6 +8,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.PasswordField;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
@@ -35,6 +36,8 @@ public class AppState extends AbstractAppState {
 		setupMessagingPortalScene();
 		setupAccountInfoScene();
 		setupComposeNewMessageScene();
+		setupDoctorMainViewScene();
+		setupMessageChatDetailView();
 	}
 	
 	public static synchronized AppState getInstance() {
@@ -51,9 +54,7 @@ public class AppState extends AbstractAppState {
 	 */
 	
 	private static ListView<Button> listview(String id) {
-		//Button[] visitItemButtons = (Button[]) currentlyLoggedIn.getMailboxInboxItems().toArray();
 		ListView<Button> listview = new ListView<Button>();
-		//listview.getItems().addAll(visitItemButtons);
 		listview.setPrefSize(500, 500);
 		listview.setId(id);
 		addNodes(CURRENT_INDEX, listview);
@@ -148,14 +149,22 @@ public class AppState extends AbstractAppState {
 	private static HBox makeTopBar() {
 		Button homeButton = navigationButton("homeButton", "Home", AppScene.PatientMainViewScene);
 		Button visitsButton = navigationButton("visitsButton", "Visits", AppScene.VisitationLogScene);
-		//Button messagesButton = navigationButton("messagesButton", "Messages", AppScene.MessagingPortalScene);
 		Button messagesButton = button("messagesButton", "Messages", e -> {
 			navigateToScene(AppScene.MessagingPortalScene);	
-			Button[] messagesViewMessageItems = currentlyLoggedIn.getMailboxInboxItems();
-			((ListView<Button>) sceneNodesMapList.get(currentSceneID).get("messagesView")).getItems().addAll(messagesViewMessageItems);
+			Button[] messagesViewMessageItems;
+			try {
+				((ListView<Button>) sceneNodesMapList.get(currentSceneID).get("messagesView")).getItems().clear();
+				currentlyLoggedIn.mailbox.clear();
+				messagesViewMessageItems = currentlyLoggedIn.getMailboxInboxItems();
+				((ListView<Button>) sceneNodesMapList.get(currentSceneID).get("messagesView")).getItems().addAll(messagesViewMessageItems);
+			} catch (Exception exception) {
+				System.out.println("AppState: couldn't read messages");
+				exception.printStackTrace();
+			}		
 		});
 		Button accountButton = navigationButton("accountButton", "Account", AppScene.AccountInfoScene);
 		Button logoutButton = button("logoutButton", "Logout", e -> {
+			currentlyLoggedIn.mailbox.clear();
 			currentlyLoggedIn = null;
 			navigateToScene(AppScene.LoginScene);
 		});	
@@ -164,8 +173,35 @@ public class AppState extends AbstractAppState {
 		return topBarStack;
 	}
 	
+	@SuppressWarnings("unchecked")
+	private static HBox makeDoctorTopBar() {
+		Button homeButton = navigationButton("homeButton", "Home", AppScene.DoctorMainViewScene);
+		Button patientsButton = navigationButton("patientsButton", "Patients", AppScene.DoctorPatientsListScene);
+		Button pharmaciesButton = navigationButton("pharmaciesButton", "Pharmacies", AppScene.DoctorPharmaciesListScene);
+		Button messagesButton = button("messagesButton", "Messages", e -> {
+			navigateToScene(AppScene.MessagingPortalScene);	
+			// load messages to present in messaging portal scene
+			// note: important that naviateToScene() is called before we get the mailbox items
+			Button[] messagesViewMessageItems;
+			try {
+				messagesViewMessageItems = currentlyLoggedIn.getMailboxInboxItems();
+				((ListView<Button>) sceneNodesMapList.get(currentSceneID).get("messagesView")).getItems().addAll(messagesViewMessageItems);
+			} catch (Exception exception) {
+				System.out.println("AppState: couldn't read messages");
+				exception.printStackTrace();
+			}
+		});
+		Button logoutButton = button("logoutButton", "Logout", e -> {
+			currentlyLoggedIn = null;
+			navigateToScene(AppScene.LoginScene);
+		});	
+		HBox topBarStack = new HBox(100, homeButton, patientsButton, messagesButton, pharmaciesButton, logoutButton);
+		topBarStack.setAlignment(Pos.CENTER);
+		return topBarStack;	
+	}
+	
 	/*
-	 * Mark: Scene Setup Methods
+	 * Mark: PATIENT VIEWS
 	 * 
 	 */
 
@@ -248,14 +284,14 @@ public class AppState extends AbstractAppState {
 		Label titleLabel = label("Compose...", Font.font("Helvetica", FontWeight.BOLD, 30));
 
 		Label toLabel = label("To: ", Font.font("Helvetica", FontWeight.BOLD, 30));
-		TextField toField = textfield("account id", "toField");
+		TextField toField = textfield("", "toField");
 		HBox toStack = new HBox(10, toLabel, toField);
-		toStack.setAlignment(Pos.CENTER);
+		//toStack.setAlignment(Pos.CENTER);
 		
 		Label subjectLabel = label("Subject: ", Font.font("Helvetica", FontWeight.BOLD, 30));
 		TextField subjectField = textfield("", "subjectField");
 		HBox subjectStack = new HBox(10, subjectLabel, subjectField);
-		subjectStack.setAlignment(Pos.CENTER);
+		//subjectStack.setAlignment(Pos.CENTER);
 
 		TextArea composeBox = textarea("composeBox");
 		
@@ -267,7 +303,13 @@ public class AppState extends AbstractAppState {
 				ex.printStackTrace();
 			}
 		});
-		Button deleteButton = button("deleteButton", "Delete", e -> {});
+		Button deleteButton = button("deleteButton", "Delete", e -> {
+			try {
+				eventHandler.handleMessageDelete();
+			} catch (Exception e1) {
+				e1.printStackTrace();
+			}
+		});
 		
 		HBox topBarStack = makeTopBar();
 		topBarStack.setAlignment(Pos.CENTER);
@@ -281,6 +323,45 @@ public class AppState extends AbstractAppState {
 		bodyStack.setAlignment(Pos.CENTER);
 		
 		VBox mainStack = new VBox(50, topBarStack, titleLabel, bodyStack);
+		mainStack.setAlignment(Pos.TOP_CENTER);
+		CURRENT_ROOT.getChildren().add(mainStack);
+	}
+	
+	static void setupMessageChatDetailView() {
+		CURRENT_INDEX = AppScene.ViewMessageDetailScene.getValue();
+		CURRENT_ROOT = sceneRoots.get(CURRENT_INDEX);
+		
+		//Label recipientLabel = label("name of person being messaged", "recipientLabel", Font.font("Helvetica", FontWeight.NORMAL, 15), Color.BLACK);
+		
+		Label fromLabel = label("From: ", Font.font("Helvetica", FontWeight.NORMAL, 15));
+		Label fromField = label("", "fromField", Font.font("Helvetica", FontWeight.NORMAL, 15), Color.BLACK);
+		HBox fromStack = new HBox(10, fromLabel, fromField);
+		
+		Label subjectLabel = label("Subject: ", Font.font("Helvetica", FontWeight.NORMAL, 15));
+		Label subjectField = label("", "subjectField", Font.font("Helvetica", FontWeight.NORMAL, 15), Color.BLACK);
+		HBox subjectStack = new HBox(10, subjectLabel, subjectField);
+
+		TextArea composeBox = textarea("composeBox");
+		
+		Button replyButton = button("replyButton", "Reply", e -> {
+			try {
+				eventHandler.handleMessageReply();
+			}
+			catch (Exception ex) {
+				ex.printStackTrace();
+			}
+		});
+		
+		HBox topBarStack = makeTopBar();
+		topBarStack.setAlignment(Pos.CENTER);
+
+		VBox composeStack = new VBox(10, fromStack, subjectStack, composeBox);
+		composeStack.setAlignment(Pos.CENTER_LEFT);
+
+		HBox bodyStack = new HBox(10, composeStack, replyButton);
+		bodyStack.setAlignment(Pos.CENTER);
+		
+		VBox mainStack = new VBox(75, topBarStack, bodyStack);
 		mainStack.setAlignment(Pos.TOP_CENTER);
 		CURRENT_ROOT.getChildren().add(mainStack);
 	}
@@ -378,4 +459,25 @@ public class AppState extends AbstractAppState {
         
         CURRENT_ROOT.getChildren().add(mainStack);
 	}
+	
+
+	/*
+	 * 
+	 * MARK: MEDICAL STAFF VIEWS
+	 * 
+	 */
+	
+	static void setupDoctorMainViewScene() {
+		CURRENT_INDEX = AppScene.DoctorMainViewScene.getValue();
+		CURRENT_ROOT = sceneRoots.get(CURRENT_INDEX);
+		
+		Label titleLabel = label("Doctor Main View", Font.font("Helvatica", FontWeight.BOLD, 30));
+		HBox topBar = makeDoctorTopBar();
+		
+        VBox mainStack = new VBox(200, topBar, titleLabel);
+        mainStack.setAlignment(Pos.TOP_CENTER);
+		
+		CURRENT_ROOT.getChildren().add(mainStack);
+	}
+	
 }

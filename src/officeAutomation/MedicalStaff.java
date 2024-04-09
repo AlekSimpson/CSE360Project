@@ -41,6 +41,10 @@ public class MedicalStaff extends Account {
 		return singleInstance;
 	}
 	
+	public boolean isMedStaff() {
+		return true;
+	}
+	
 	private void loadPatientsFromJson() throws IOException, ParseException, InvalidKeySpecException {
 		// get out file
 		File metadata = new File(savedDataPath);
@@ -85,11 +89,8 @@ public class MedicalStaff extends Account {
 			return false;
 		}
 		String inputtedHash = result.andThen();
-		//String 
-		// TODO: NOT FINISHED, working on this today, should be finished by today (Apr 8, 1:13 PM) - Alek Simpson
-
 		
-		return false;
+		return (inputtedHash.equals(accountHash));
 	}
 	
 	public HashMap<String, Patient> getPatients() {
@@ -99,6 +100,18 @@ public class MedicalStaff extends Account {
 	public HashMap<String, Pharmacy> getPharmacies() {
 		return pharmaciesNamed;
 	}
+	
+	public void sendMessage(String to, String tUID, String subject, String messageText) {
+		Message.composeAndSendMessage(subject, to, tUID, "Doctor ___", UID, messageText);
+	}
+	
+	/*
+	@Override
+	public void sendMessage(String to, String subject, String m) {
+		String name  = firstname + " " + lastname;
+		Message.composeAndSendMessage(subject, to, toUID, from, fromUID, message);
+	}
+	 */
 	
 	public void addPharmacy(String physAdd, String name, int phone, String email) {
 		Pharmacy newPharm = new Pharmacy(physAdd, name, phone, email);

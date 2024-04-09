@@ -21,6 +21,8 @@ public class Message {
 	String fromUID;
 	String message;
 	String subject;
+	// if the message is a reply to another message then the id of the message it is replying to is stored here
+	String idOfMessageRepliedTo; 
 	private boolean isUnread;
 	private final static String messagesFilePath = "./src/officeAutomation/ApplicationData/messages.json";
 	int messageChainIndex;
@@ -52,22 +54,19 @@ public class Message {
 		if (accountObj == null) // user has no messages
 			return null;
 		
+		// NOTE: THIS IS ASSUMING THE MESSAGE IS NOT A REPLY CHAIN
 		JSONObject messageObj = (JSONObject) accountObj.get(id);
-		JSONObject currJson;
-		Message currMessage;
-		for (int i = 0; i < messageObj.size(); i++) {
-			currMessage = new Message();
-			currJson = (JSONObject) messageObj.get(i);
-			currMessage.ID = (String) currJson.get("ID");
-			currMessage.to = (String) currJson.get("to");
-			currMessage.toUID = (String) currJson.get("toUID");
-			currMessage.from = (String) currJson.get("from");
-			currMessage.fromUID = (String) currJson.get("fromUID");
-			currMessage.subject = (String) currJson.get("subject");
-			currMessage.message = (String) currJson.get("message");
-			currMessage.isUnread = (boolean) currJson.get("isUnread");
-			currMessage.messageChainIndex = (int) currJson.get("messageChainIndex");
-		}
+		Message currMessage = new Message();
+		currMessage.ID = (String) messageObj.get("ID");
+		currMessage.to = (String) messageObj.get("to");
+		currMessage.toUID = (String) messageObj.get("toUID");
+		currMessage.from = (String) messageObj.get("from");
+		currMessage.fromUID = (String) messageObj.get("fromUID");
+		currMessage.subject = (String) messageObj.get("subject");
+		currMessage.message = (String) messageObj.get("message");
+		currMessage.isUnread = (boolean) messageObj.get("isUnread");
+		currMessage.messageChainIndex = Integer.parseInt((String) messageObj.get("messageChainIndex"));
+		messages.add(currMessage);
 
 		return messages;
 	}
@@ -81,6 +80,14 @@ public class Message {
 			e.printStackTrace();
 		}
 		return m;
+	}
+	
+	public String getID() {
+		return ID;
+	}
+	
+	public boolean isUnread() {
+		return isUnread;
 	}
 	
 	public Message reply(String message) {
@@ -109,7 +116,7 @@ public class Message {
 		messageObj.put("message", message);
 		messageObj.put("isUnread", isUnread);
 		messageObj.put("subject", subject);
-		messageObj.put("messageChainIndex", messageChainIndex);
+		messageObj.put("messageChainIndex", String.valueOf(messageChainIndex));
 		
 		return messageObj;
 	}
