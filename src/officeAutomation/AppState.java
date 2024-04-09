@@ -8,6 +8,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.PasswordField;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
@@ -35,6 +36,7 @@ public class AppState extends AbstractAppState {
 		setupMessagingPortalScene();
 		setupAccountInfoScene();
 		setupComposeNewMessageScene();
+		setupSinglePatientViewScene();
 	}
 	
 	public static synchronized AppState getInstance() {
@@ -190,9 +192,23 @@ public class AppState extends AbstractAppState {
 		Button messagingCenter = button("messagingCenter", "Messaging Center", e -> {});
 		Button accountCenter = button("accountCenter", "Account", e -> {});
 		
+		
+		//temporary buttons for charles' work (single patient info page,
+												//new patient info page)
+		
+		Button singlePatientInfoPage = button("singlePatientInfoPage", "Single Patient Info Page", e -> {
+			try {
+				eventHandler.handleNavToSPI();
+			} catch (Exception e1) {
+				
+				e1.printStackTrace();
+			}
+		});
+		
+		
 		// Setup layout of scene
 		VBox welcomeBackStack = new VBox(50, welcomeBackLabel, recentVisitsLabel, visitsView);
-		VBox buttonStack = new VBox(50, messagingCenter, accountCenter);
+		VBox buttonStack = new VBox(50, messagingCenter, accountCenter, singlePatientInfoPage);
 		HBox bodyStack = new HBox(100, welcomeBackStack, buttonStack);
 		bodyStack.setAlignment(Pos.CENTER);
 		
@@ -215,7 +231,7 @@ public class AppState extends AbstractAppState {
 		mainStack.setAlignment(Pos.TOP_CENTER);
 		CURRENT_ROOT.getChildren().add(mainStack);
 	}
-
+	
 	// Mark: setupMessagingPortalScene
 	static void setupMessagingPortalScene() {
 		CURRENT_INDEX = AppScene.MessagingPortalScene.getValue();
@@ -377,5 +393,72 @@ public class AppState extends AbstractAppState {
         mainStack.setAlignment(Pos.TOP_CENTER);
         
         CURRENT_ROOT.getChildren().add(mainStack);
+	}
+	
+	static void setupSinglePatientViewScene(){
+		CURRENT_INDEX = AppScene.SinglePatientViewScene.getValue();
+		CURRENT_ROOT = sceneRoots.get(CURRENT_INDEX);
+		
+		Label SinglePatientViewLabel = label("Viewing Patient: ", Font.font("Helvetica", FontWeight.BOLD, 30));
+        SinglePatientViewLabel.setPadding(new Insets(100, 0, 0, 0));
+        
+        // ScrollPane for the patient information sections
+        ScrollPane scrollPane = new ScrollPane();
+        scrollPane.setPadding(new Insets(20));
+        scrollPane.setFitToWidth(true);
+        
+        // VBox to hold all patient information sections
+        VBox vbox = new VBox(10);
+        vbox.setPadding(new Insets(20));
+        
+        //user info
+        //String name = 
+
+        // Basic Information section
+        Label basicInfoLabel = new Label("Basic Information:");
+        VBox basicInfoBox = new VBox(5);
+        basicInfoBox.getChildren().addAll(
+            label("Full Name: [Full Name]", "fullNameLabel", Font.font("Helvetica", FontWeight.NORMAL, 10), Color.BLACK),
+            label("Date of Birth: [DOB]", "dobLabel", Font.font("Helvetica", FontWeight.NORMAL, 10), Color.BLACK),
+            label("Email: [Email]", "emailLabel", Font.font("Helvetica", FontWeight.NORMAL, 10), Color.BLACK),
+            label("Phone Number: [Phone]", "phoneNumberLabel", Font.font("Helvetica", FontWeight.NORMAL, 10), Color.BLACK),
+            label("Physical Address: [Address]", "addressLabel", Font.font("Helvetica", FontWeight.NORMAL, 10), Color.BLACK)
+        );
+        basicInfoBox.setPadding(new Insets(0, 0, 0, 20));
+
+        // Visitation History section
+        Label visitHistoryLabel = new Label("Visitation History:");
+        VBox visitHistoryBox = new VBox(5);
+        
+        visitHistoryBox.getChildren().addAll(
+            new Label("Visited [doctor name] on xx/xx/xxxx"),
+            new Label("Visited [doctor name] on xx/xx/xxxx")
+        );
+        Button addVisitButton = new Button("Add New Visit");
+        // Add functionality to addVisitButton here
+
+        // Health Records section
+        Label healthRecordsLabel = new Label("Health Records:");
+        VBox healthRecordsBox = new VBox(5);
+        healthRecordsBox.getChildren().addAll(
+            label("Previous Health Issues: [Issues]", "prevHealthIssuesLabel", Font.font("Helvetica", FontWeight.NORMAL, 10), Color.BLACK),
+            label("Previous Medications: [Medications]", "prevMedicationsLabel", Font.font("Helvetica", FontWeight.NORMAL, 10), Color.BLACK),
+            label("Immunization Records: [Records]", "immunizationRecordsLabel", Font.font("Helvetica", FontWeight.NORMAL, 10), Color.BLACK),
+            label("Other Recommendations: [Recommendations]", "recommendations", Font.font("Helvetica", FontWeight.NORMAL, 10), Color.BLACK)
+        );
+        healthRecordsBox.setPadding(new Insets(0, 0, 0, 20));
+
+        // Adding all sections to the VBox
+        vbox.getChildren().addAll(basicInfoLabel, basicInfoBox, visitHistoryLabel, visitHistoryBox, addVisitButton, healthRecordsLabel, healthRecordsBox);
+        
+        // Set the VBox as the content for the ScrollPane
+        scrollPane.setContent(vbox);
+        VBox mainStack = new VBox(10, scrollPane);
+
+        // Add the ScrollPane to the root
+        //CURRENT_ROOT.getChildren().addAll(scrollPane, vbox);
+        CURRENT_ROOT.getChildren().add(mainStack);
+        
+       
 	}
 }

@@ -9,9 +9,11 @@ public enum AppScene {
 	VisitationLogScene(5),
 	VisitPageScene(6),  // for viewing individual patient visit records
 	AccountInfoScene(7),       
-	EditInfoScene(8);          
+	EditInfoScene(8),
+	SinglePatientViewScene(9); 
 	
 	private final int value;
+	public final static int amount = 10;
 	
 	AppScene(int v) {
 		value = v;
@@ -20,4 +22,6 @@ public enum AppScene {
 	public int getValue() {
 		return value;
 	}
+	
+	
 }

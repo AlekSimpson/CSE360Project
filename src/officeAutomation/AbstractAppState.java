@@ -40,7 +40,7 @@ public class AbstractAppState {
 		eventHandler = new AppStateEventHandler();
 		appIsRunning = true;
 		currentSceneID = AppScene.LoginScene.getValue();
-		sceneAmount = 9;
+		sceneAmount = AppScene.amount;
 		sceneNodesMapList = new ArrayList<Map<String, Node>>();
 		scenes = new ArrayList<Scene>();
 		sceneRoots = new ArrayList<StackPane>();
@@ -195,6 +195,26 @@ public class AbstractAppState {
 				displayError(err);
 				return;
 			}
+		}
+		
+		public void handleNavToSPI() throws Exception {
+			navigateToScene(AppScene.SinglePatientViewScene);
+			String fullName = currentlyLoggedIn.getFirstname() + " " + currentlyLoggedIn.getLastname();
+			String dob = currentlyLoggedIn.dateOfBirth.toString();
+			String email = currentlyLoggedIn.email;
+			String phoneNumber = String.valueOf(currentlyLoggedIn.phoneNumber);
+			String prevHealthIssues = currentlyLoggedIn.visits.getLast().otherHealthConditions.toString();
+			String previousMedications = currentlyLoggedIn.visits.getLast().getCurrentMedications();
+			
+			
+			((Label) getNode("fullNameLabel")).setText(String.format("Fullname: %s", fullName));
+			((Label) getNode("dobLabel")).setText(String.format("Date of Birth: %s", dob));
+			((Label) getNode("emailLabel")).setText(String.format("Email: %s", email));
+			((Label) getNode("phoneNumberLabel")).setText(String.format("Phone Number: %s", phoneNumber));
+			((Label) getNode("prevHealthIssuesLabel")).setText(String.format("Previous Health Issues: %s", prevHealthIssues));
+			((Label) getNode("prevMedicationsLabel")).setText(String.format("Previous Medications: %s", previousMedications));
+			
+			
 		}
 		
 		public void handleSignUp() throws Exception {
