@@ -1,0 +1,34 @@
+/*
+COLOR HEX CODE REFERENCE:
+	dark blue 2 (text, outlines): #22385B
+	dark blue 1 (gradients w/ dark blue 2): #274370
+	dark medium blue (placeholder text, attention grabbers, & such): #5DA3DA
+	light medium blue: #ACCFEB
+	light blue: #DBF2FE
+	white: #ffffff
+	dark red (for notifs): #B23B2D
+	light red (for notifs): #CD6C60
+*/
+
+.button {
+	/* main box */
+	-fx-background-color: linear-gradient(to top left, #ACCFEB, #DBF2FE);
+    -fx-background-radius: 0;
+    -fx-background-insets: 0;
+    -fx-text-fill: #22385B;
+    -fx-padding: 30;
+    
+    /* borders */
+    -fx-border-color: linear-gradient(to top left, #5DA3DA, #ACCFEB);
+    -fx-border-width: 1;
+    -fx-border-radius: 0; 
+}
+
+.button:hover{
+	-fx-background-color: linear-gradient(to top left, #5DA3DA, #ACCFEB);
+	-fx-border-color: linear-gradient(to top left, #274370, #5DA3DA);
+}
+
+#topBarStack {
+	-fx-background-color: #ACCFEB;
+}

@@ -16,11 +16,13 @@ import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
+import javafx.scene.text.Text;
 
 // This class is application specific and solely is for managing scene setup functions for the app scenes
 public class AppState extends AbstractAppState {
@@ -196,22 +198,43 @@ public class AppState extends AbstractAppState {
 	@SuppressWarnings("unchecked")
 	private static HBox makeTopBar() {
 		Button homeButton = navigationButton("homeButton", "Home", AppScene.PatientMainViewScene);
+		homeButton.setMaxWidth(WIDTH * 0.2);
 
 		Button visitsButton = button("visitsButton", "Visits", e -> {
 			eventHandler.patientNavigateToVisitsScene();
 		});
+		visitsButton.setMaxWidth(WIDTH * 0.2);
 
 		Button messagesButton = button("messagesButton", "Messages", e -> {
 			customNavigateToMessagingPortal();
 		});
+		messagesButton.setMaxWidth(WIDTH * 0.2);
 
 		Button accountButton = button("accountButton", "Account", e -> {
 			eventHandler.handleAccountTabPressed();
 		});
+		accountButton.setMaxWidth(WIDTH * 0.2);
 		
 		Button logoutButton = logoutButton();
-		HBox topBarStack = new HBox(100, homeButton, visitsButton, messagesButton, accountButton, logoutButton);
+		logoutButton.setMaxWidth(WIDTH * 0.2);
+		
+		HBox topBarStack = new HBox(homeButton, visitsButton, messagesButton, accountButton, logoutButton);
+		topBarStack.setId("topBarStack");
 		topBarStack.setAlignment(Pos.CENTER);
+		HBox.setHgrow(homeButton, Priority.ALWAYS);
+		HBox.setHgrow(visitsButton, Priority.ALWAYS);
+		HBox.setHgrow(messagesButton, Priority.ALWAYS);
+		HBox.setHgrow(accountButton, Priority.ALWAYS);
+		HBox.setHgrow(logoutButton, Priority.ALWAYS);
+		
+		homeButton.setFont(Font.font("Helvetica", 20));
+		visitsButton.setFont(Font.font("Helvetica", 20));
+		messagesButton.setFont(Font.font("Helvetica", 20));
+		accountButton.setFont(Font.font("Helvetica", 20));
+		logoutButton.setFont(Font.font("Helvetica", 20));
+		
+		CURRENT_ROOT.getStylesheets().add("//src/officeAutomation/stylesheets/styling.css");
+		CURRENT_ROOT.getStylesheets().add("//src/officeAutomation/stylesheets/styling_navbar.css");
 		return topBarStack;
 	}
 	
@@ -247,9 +270,11 @@ public class AppState extends AbstractAppState {
 	@SuppressWarnings("unchecked")
 	private static HBox makeDoctorTopBar() {
 		Button homeButton = navigationButton("homeButton", "Home", AppScene.DoctorMainViewScene);
+		homeButton.setMaxWidth(WIDTH* 0.2);
 		Button patientsButton = button("patientsButton", "Patients", e -> {
 			customPatientEventHandler();
 		});
+		patientsButton.setMaxWidth(WIDTH* 0.2);
 
 		Button pharmaciesButton = button("pharmaciesButton", "Pharmacies", e -> {
 			navigateToScene(AppScene.DoctorPharmaciesListScene);
@@ -278,6 +303,7 @@ public class AppState extends AbstractAppState {
 				exception.printStackTrace();
 			}
 		});
+		pharmaciesButton.setMaxWidth(WIDTH* 0.2);
 		
 		Button messagesButton = button("messagesButton", "Messages", e -> {
 			navigateToScene(AppScene.DoctorMessagingPortalScene);	
@@ -294,11 +320,31 @@ public class AppState extends AbstractAppState {
 				exception.printStackTrace();
 			}
 		});
+		messagesButton.setMaxWidth(WIDTH* 0.2);
 
 		Button logoutButton = logoutButton();
-		HBox topBarStack = new HBox(100, homeButton, patientsButton, messagesButton, pharmaciesButton, logoutButton);
+		logoutButton.setMaxWidth(WIDTH* 0.2);
+		HBox topBarStack = new HBox(homeButton, patientsButton, messagesButton, pharmaciesButton, logoutButton);
+		topBarStack.setId("topBarStack");
 		topBarStack.setAlignment(Pos.CENTER);
-		return topBarStack;	
+		
+		HBox.setHgrow(homeButton, Priority.ALWAYS);
+		HBox.setHgrow(patientsButton, Priority.ALWAYS);
+		HBox.setHgrow(pharmaciesButton, Priority.ALWAYS);
+		HBox.setHgrow(messagesButton, Priority.ALWAYS);
+		HBox.setHgrow(logoutButton, Priority.ALWAYS);
+		
+		homeButton.setFont(Font.font("Helvetica", 20));
+		patientsButton.setFont(Font.font("Helvetica", 20));
+		pharmaciesButton.setFont(Font.font("Helvetica", 20));
+		messagesButton.setFont(Font.font("Helvetica", 20));
+		logoutButton.setFont(Font.font("Helvetica", 20));
+		
+		
+		CURRENT_ROOT.getStylesheets().add("//src/officeAutomation/stylesheets/styling.css");
+		CURRENT_ROOT.getStylesheets().add("//src/officeAutomation/stylesheets/styling_navbar.css");
+		
+		return topBarStack;
 	}
 	
 	/*
@@ -316,6 +362,8 @@ public class AppState extends AbstractAppState {
 
 		// Setup welcomeBack node elements
 		Label welcomeBackLabel = label("Welcome Back!", Font.font("Helvetica", FontWeight.SEMI_BOLD, 25));
+		welcomeBackLabel.setId("wbLabel");
+		welcomeBackLabel.setPadding(new Insets(25, 0, 25, 200));
 		Label recentVisitsLabel = label("Recent Visits:", Font.font("Helvetica", FontWeight.NORMAL, 20));
 		
 		ListView<Button> visitsView = listview("recentVisitsView");
@@ -324,21 +372,32 @@ public class AppState extends AbstractAppState {
 		Button messagingCenter = button("messagingCenter", "Messaging Center", e -> {
 			customNavigateToMessagingPortal();
 		});
+		messagingCenter.setPrefSize(400, 250);
+		messagingCenter.setFont(Font.font("Helvetica", 24));
 
 		Button accountCenter = button("accountCenter", "Account", e -> {
 			eventHandler.handleAccountTabPressed();
 		});
+		accountCenter.setPrefSize(400, 250);
+		accountCenter.setFont(Font.font("Helvetica", 24));
 		
 		// Setup layout of scene
 		VBox welcomeBackStack = new VBox(25, welcomeBackLabel, recentVisitsLabel, visitsView);
+		welcomeBackStack.setId("wbstack");
+		welcomeBackStack.setAlignment(Pos.TOP_LEFT);
 		VBox buttonStack = new VBox(50, messagingCenter, accountCenter);
-		HBox bodyStack = new HBox(100, welcomeBackStack, buttonStack);
-		bodyStack.setAlignment(Pos.CENTER);
+		buttonStack.setId("bstack");
+		HBox bodyStack = new HBox(50, welcomeBackStack, buttonStack);
+		bodyStack.setAlignment(Pos.BOTTOM_CENTER);
+		bodyStack.setId("bodyStack");
 		
-		VBox mainStack = new VBox(200, topBarStack, bodyStack);
-		mainStack.setAlignment(Pos.TOP_CENTER);
+		VBox mainStack = new VBox(0, topBarStack, welcomeBackLabel, bodyStack);
+		mainStack.setId("mainStack");
 		
 		CURRENT_ROOT.getChildren().add(mainStack);
+		
+		CURRENT_ROOT.getStylesheets().add("//src/officeAutomation/stylesheets/styling.css");
+		CURRENT_ROOT.getStylesheets().add("//src/officeAutomation/stylesheets/styling_mainpage.css");
 	}
 	
 	// Mark: setupVisitationLogScene
@@ -346,18 +405,25 @@ public class AppState extends AbstractAppState {
 		CURRENT_INDEX = AppScene.VisitationLogScene.getValue();
 		CURRENT_ROOT = sceneRoots.get(CURRENT_INDEX);
 		
-		Label titleLabel = label("Visitation Log", Font.font("Helvetica", FontWeight.NORMAL, 20));
+		Label titleLabel = label("Visitation Log", Font.font("Helvetica", FontWeight.BOLD, 40));
 
 		HBox topBarStack = makeTopBar();
 		
 		ListView<Button> visitsView = listview("visitsView");
+		visitsView.setMaxWidth(WIDTH * 0.8);
 		
 		VBox bodyStack = new VBox(20, titleLabel, visitsView);
 		bodyStack.setAlignment(Pos.TOP_CENTER);
+		bodyStack.setId("bodyStack");
 		
-		VBox mainStack = new VBox(200, topBarStack, bodyStack);
+		VBox mainStack = new VBox(50, topBarStack, bodyStack);
 		mainStack.setAlignment(Pos.TOP_CENTER);
+		mainStack.setId("mainStack");
 		CURRENT_ROOT.getChildren().add(mainStack);
+		
+		//stylesheets
+		CURRENT_ROOT.getStylesheets().add("//src/officeAutomation/stylesheets/styling.css");
+		CURRENT_ROOT.getStylesheets().add("//src/officeAutomation/stylesheets/styling_visitationlog.css");
 	}
 
 	// Mark: setupMessagingPortalScene
@@ -365,24 +431,35 @@ public class AppState extends AbstractAppState {
 		CURRENT_INDEX = AppScene.MessagingPortalScene.getValue();
 		CURRENT_ROOT = sceneRoots.get(CURRENT_INDEX);
 		
-		Label titleLabel = label("Inbox", Font.font("Helvetica", FontWeight.BOLD, 30));
+		Label titleLabel = label("Inbox", Font.font("Helvetica", FontWeight.BOLD, 40));
 		
 		HBox topBarStack = makeTopBar();
 		topBarStack.setAlignment(Pos.CENTER);
 		
 		ListView<Button> messagesView = listview("messagesView");
+		messagesView.setMaxWidth(WIDTH * 0.7);
 		
 		Button newMessageButton = navigationButton("newMessage", "New Message", AppScene.ComposeNewMessageScene);
+		newMessageButton.setMaxWidth(WIDTH * 0.3);
+		newMessageButton.setFont(Font.font("Helvetica", 20));
 		
 		HBox contentStack = new HBox(20, messagesView, newMessageButton);
-		contentStack.setAlignment(Pos.CENTER);
+		contentStack.setAlignment(Pos.BOTTOM_CENTER);
+		contentStack.setId("contentStack");
+		contentStack.setMaxWidth(WIDTH);
 		
 		VBox bodyStack = new VBox(20, titleLabel, contentStack);
 		bodyStack.setAlignment(Pos.CENTER);
+		bodyStack.setId("bodyStack");
 		
-		VBox mainStack = new VBox(200, topBarStack, bodyStack);
+		VBox mainStack = new VBox(50, topBarStack, bodyStack);
 		mainStack.setAlignment(Pos.TOP_CENTER);
+		mainStack.setId("mainStack");
 		CURRENT_ROOT.getChildren().add(mainStack);
+		
+		//stylesheets
+		CURRENT_ROOT.getStylesheets().add("//src/officeAutomation/stylesheets/styling.css");
+		CURRENT_ROOT.getStylesheets().add("//src/officeAutomation/stylesheets/styling_messagingportal.css");
 	}
 	
 	static void setupDoctorMessagingPortalScene() {
@@ -395,18 +472,29 @@ public class AppState extends AbstractAppState {
 		topBarStack.setAlignment(Pos.CENTER);
 		
 		ListView<Button> messagesView = listview("messagesView");
+		messagesView.setMaxWidth(WIDTH * 0.7);
 		
 		Button newMessageButton = navigationButton("newMessage", "New Message", AppScene.DoctorComposeNewMessageScene);
+		newMessageButton.setMaxWidth(WIDTH * 0.3);
+		newMessageButton.setFont(Font.font("Helvetica", 20));
 		
 		HBox contentStack = new HBox(20, messagesView, newMessageButton);
-		contentStack.setAlignment(Pos.CENTER);
+		contentStack.setAlignment(Pos.BOTTOM_CENTER);
+		contentStack.setId("contentStack");
+		contentStack.setMaxWidth(WIDTH);
 		
 		VBox bodyStack = new VBox(20, titleLabel, contentStack);
 		bodyStack.setAlignment(Pos.CENTER);
+		bodyStack.setId("bodyStack");
 		
-		VBox mainStack = new VBox(200, topBarStack, bodyStack);
+		VBox mainStack = new VBox(50, topBarStack, bodyStack);
 		mainStack.setAlignment(Pos.TOP_CENTER);
-		CURRENT_ROOT.getChildren().add(mainStack);	
+		mainStack.setId("mainStack");
+		CURRENT_ROOT.getChildren().add(mainStack);
+		
+		//stylesheets
+		CURRENT_ROOT.getStylesheets().add("//src/officeAutomation/stylesheets/styling.css");
+		CURRENT_ROOT.getStylesheets().add("//src/officeAutomation/stylesheets/styling_messagingportal.css");
 	}
 	
 	static void setupComposeNewMessageScene() {
@@ -452,11 +540,17 @@ public class AppState extends AbstractAppState {
 		actionStack.setAlignment(Pos.CENTER);
 
 		HBox bodyStack = new HBox(10, composeStack, actionStack);
+		bodyStack.setId("bodyStack");
 		bodyStack.setAlignment(Pos.CENTER);
 		
 		VBox mainStack = new VBox(50, topBarStack, titleLabel, bodyStack);
 		mainStack.setAlignment(Pos.TOP_CENTER);
+		mainStack.setId("mainStack");
 		CURRENT_ROOT.getChildren().add(mainStack);
+		
+		//stylesheets
+		CURRENT_ROOT.getStylesheets().add("//src/officeAutomation/stylesheets/styling.css");
+		CURRENT_ROOT.getStylesheets().add("//src/officeAutomation/stylesheets/styling_messagingportal.css");
 	}
 	
 		static void setupDoctorComposeNewMessageScene() {
@@ -507,6 +601,10 @@ public class AppState extends AbstractAppState {
 		VBox mainStack = new VBox(50, topBarStack, titleLabel, bodyStack);
 		mainStack.setAlignment(Pos.TOP_CENTER);
 		CURRENT_ROOT.getChildren().add(mainStack);
+		
+		//stylesheets
+		CURRENT_ROOT.getStylesheets().add("//src/officeAutomation/stylesheets/styling.css");
+		CURRENT_ROOT.getStylesheets().add("//src/officeAutomation/stylesheets/styling_messagingportal.css");
 	}
 	
 	static void setupMessageChatDetailView() {
@@ -542,10 +640,16 @@ public class AppState extends AbstractAppState {
 
 		HBox bodyStack = new HBox(10, composeStack, replyButton);
 		bodyStack.setAlignment(Pos.CENTER);
+		bodyStack.setId("bodyStack");
 		
 		VBox mainStack = new VBox(75, topBarStack, bodyStack);
 		mainStack.setAlignment(Pos.TOP_CENTER);
+		mainStack.setId("mainStack");
 		CURRENT_ROOT.getChildren().add(mainStack);
+		
+		//stylesheets
+		CURRENT_ROOT.getStylesheets().add("//src/officeAutomation/stylesheets/styling.css");
+		CURRENT_ROOT.getStylesheets().add("//src/officeAutomation/stylesheets/styling_messagingportal.css");
 	}
 	
 	// Mark: setupAccountInfoScene
@@ -559,12 +663,14 @@ public class AppState extends AbstractAppState {
 		Label titleLabel = label("Account Information: ", Font.font("Helvetica", FontWeight.BOLD, 30));
 
 		Font labelFont = Font.font("Helvetica", FontWeight.NORMAL, 20);
+		
 		VBox accountInfoBox = new VBox(5);
 		accountInfoBox.getChildren().addAll(
 				label("Email: ", "emailLabel", labelFont, Color.BLACK),
 				label("Phone Number: ", "phoneNumberLabel", labelFont, Color.BLACK),
 				label("Physical Address: ", "addressLabel", labelFont, Color.BLACK)
 		);
+		accountInfoBox.setAlignment(Pos.CENTER_LEFT);
 		
 		VBox otherInformation = new VBox(5);
 		otherInformation.getChildren().addAll(
@@ -576,16 +682,24 @@ public class AppState extends AbstractAppState {
 		otherInformation.setAlignment(Pos.CENTER);
 		
 		Button newEditButton = navigationButton("newEdit", "Edit Account Information", AppScene.EditInfoScene);
+		newEditButton.setFont(Font.font("Helvetica", 20));
 		
 		HBox contactInformation = new HBox(20, accountInfoBox, newEditButton);
 		contactInformation.setAlignment(Pos.CENTER);
 		
 		VBox bodyStack = new VBox(20, contactInformation, otherInformation);
 		bodyStack.setAlignment(Pos.CENTER_LEFT);
+		bodyStack.setId("bodyStack");
+		bodyStack.setMaxWidth(WIDTH * 0.6);
 		
 		VBox mainStack = new VBox(50, topBarStack, titleLabel, bodyStack);
 		mainStack.setAlignment(Pos.TOP_CENTER);
+		mainStack.setId("mainStack");
 		CURRENT_ROOT.getChildren().add(mainStack);
+		
+		//stylesheets
+		CURRENT_ROOT.getStylesheets().add("//src/officeAutomation/stylesheets/styling.css");
+		CURRENT_ROOT.getStylesheets().add("//src/officeAutomation/stylesheets/styling_accountinfo.css");
 	} 
 	
 	static void setupEditInfoScene() {
@@ -599,7 +713,9 @@ public class AppState extends AbstractAppState {
 		Button saveButton = button("saveButton", "Save", e -> {
 			eventHandler.handleSaveAccountInfo();
 		});
+		saveButton.setFont(Font.font("Helvetica", 20));
 		Button backButton = navigationButton("backButton", "Cancel", AppScene.AccountInfoScene);
+		backButton.setFont(Font.font("Helvetica", 20));
 
 		VBox editInfoBox = new VBox(5);
 		editInfoBox.getChildren().addAll(
@@ -612,11 +728,23 @@ public class AppState extends AbstractAppState {
 				saveButton,
 				backButton
 		);
+		editInfoBox.setMaxWidth(WIDTH * 0.6);
 		editInfoBox.setAlignment(Pos.CENTER);
 		
-		VBox mainStack = new VBox(50, topBar, titleLabel, editInfoBox);
+		VBox bodyStack = new VBox(50, editInfoBox);
+		bodyStack.setPadding(new Insets(0, 0, 50, 0));
+		bodyStack.setId("bodyStack");
+		bodyStack.setMaxWidth(WIDTH * 0.6);
+		
+		VBox mainStack = new VBox(25, topBar, titleLabel, bodyStack);
+		
 		mainStack.setAlignment(Pos.TOP_CENTER);
+		mainStack.setId("mainStack");
 		CURRENT_ROOT.getChildren().add(mainStack);
+		
+		//stylesheets
+		CURRENT_ROOT.getStylesheets().add("//src/officeAutomation/stylesheets/styling.css");
+		CURRENT_ROOT.getStylesheets().add("//src/officeAutomation/stylesheets/styling_accountinfo.css");
 	}
 	
 	// Mark: setupLoginScene
@@ -626,15 +754,60 @@ public class AppState extends AbstractAppState {
 		
 		Label errorDisplayLabel = label("", "ERROR LABEL", Font.font("Helvetica", FontWeight.BOLD, 15), Color.RED);
 		errorDisplayLabel.setVisible(false);
-
-		Label titleLabel = label("Sign In", Font.font("Helvetica", FontWeight.BOLD, 30));
-		titleLabel.setPadding(new Insets(100, 0, 0, 0));
 		
-		TextField fullnameField = textfield("Fullname (Firstname Lastname)", "fullnameField", "Username");
-		TextField birthdayField = textfield("mm/dd/yyyy", "birthdayField");
-		PasswordField passwordField = passfield("Password", "passwordField");
+		Label titleLabel = label("Sign In", Font.font("Helvetica", FontWeight.BOLD, 30));
 
-		Button loginButton = button("loginButton", "Login", e -> {
+		TextField fullnameField = textfield("Fullname (Firstname Lastname)", "fullnameField", "Username");
+		fullnameField.setFont(Font.font("Helvetica", 14));
+		TextField birthdayField = textfield("mm/dd/yyyy", "birthdayField");
+		birthdayField.setFont(Font.font("Helvetica", 14));
+		PasswordField passwordField = passfield("Password", "passwordField");
+		passwordField.setFont(Font.font("Helvetica", 14));
+
+		Button loginButton = new Button();
+		loginButton.setId("loginButton");
+		loginButton.setFont(Font.font("Helvetica", 20));
+		loginButton.setText("Login");
+		loginButton.setMaxWidth(WIDTH * 0.15);
+		
+		Text signUpPrompt = new Text("Don't have an account?");
+		signUpPrompt.setId("signUpPrompt");
+		signUpPrompt.setFont(Font.font("Helvetica", 14));
+
+		Button signUpButton = navigationButton("signUpButton", "Sign Up", AppScene.SignUpScene);
+		signUpButton.setId("signUpButton");
+		signUpButton.setFont(Font.font("Helvetica", FontWeight.BOLD, 24));
+		signUpButton.setText("Sign Up!");
+		signUpButton.setMaxWidth(WIDTH * 0.2);
+		
+		// setup input fields
+		fullnameField.setPromptText("Username");
+		passwordField.setPromptText("Password");
+		
+		// title label setup
+		titleLabel.setFont(Font.font("Helvetica", FontWeight.BOLD, 40));
+		titleLabel.setPadding(new Insets(80, 0, 0, 0));
+		
+		// styling organization boxes
+		VBox loginStack = new VBox(20, fullnameField, birthdayField, passwordField, loginButton, errorDisplayLabel);
+		loginStack.setId("loginStack");
+		loginStack.setAlignment(Pos.TOP_CENTER);
+		
+		VBox signUpStack = new VBox(20, signUpPrompt, signUpButton);
+		signUpStack.setId("signupStack");
+		signUpStack.setAlignment(Pos.TOP_CENTER);
+		
+		VBox bodyStack = new VBox(20, loginStack, signUpStack);
+		bodyStack.setId("bodyStack");
+		bodyStack.setMaxWidth(WIDTH * 0.4);
+		
+		VBox mainStack = new VBox(100, titleLabel, bodyStack);
+		mainStack.setAlignment(Pos.TOP_CENTER);
+		
+		CURRENT_ROOT.getChildren().add(mainStack);
+		
+		// event handlers
+		loginButton.setOnAction(e -> {
 			try {
 				eventHandler.handleLogin();
 			}
@@ -642,15 +815,10 @@ public class AppState extends AbstractAppState {
 				ex.printStackTrace();
 			}
 		});
-		Button signUpButton = navigationButton("signUpButton", "Sign Up", AppScene.SignUpScene);
 		
-		VBox bodyStack = new VBox(20, fullnameField, birthdayField, passwordField, loginButton, signUpButton, errorDisplayLabel);
-		bodyStack.setMaxWidth(WIDTH * 0.3);
-		
-		VBox mainStack = new VBox(200, titleLabel, bodyStack);
-		mainStack.setAlignment(Pos.TOP_CENTER);
-		
-		CURRENT_ROOT.getChildren().add(mainStack);
+		// import stylesheets
+		CURRENT_ROOT.getStylesheets().add("//src/officeAutomation/stylesheets/styling.css");
+		CURRENT_ROOT.getStylesheets().add("//src/officeAutomation/stylesheets/styling_login.css");
 	}
 	
 	// Mark: setupSignUpScene
@@ -662,15 +830,18 @@ public class AppState extends AbstractAppState {
 		Label errorDisplayLabel = label("", "ERROR LABEL", Font.font("Helvetica", FontWeight.BOLD, 15), Color.RED);
 		errorDisplayLabel.setVisible(false);
 
-		Label titleLabel = label("Sign Up", Font.font("Helvetica", FontWeight.BOLD, 30));
-        titleLabel.setPadding(new Insets(100, 0, 0, 0));
+		Label titleLabel = label("Sign Up", Font.font("Helvetica", FontWeight.BOLD, 40));
+		titleLabel.setId("titleLabel");
 
         Label greetings = new Label("Welcome, please create an account"); // Title
+        greetings.setId("greetings");
+        
         TextField firstnameField = textfield("Firstname", "firstnameField");
         TextField lastnameField = textfield("Lastname", "lastnameField");
         TextField dateOfBirth = textfield("mm/dd/yyyy", "dateOfBirth");
         PasswordField passFieldOne = passfield("Password", "passFieldOne");
         PasswordField passFieldTwo = passfield("Confirm your password", "passFieldTwo");
+        
         Button signUpButton = button("signUpButton", "Sign Up", e -> {
         	try {
         		eventHandler.handleSignUp();
@@ -679,6 +850,9 @@ public class AppState extends AbstractAppState {
 				e1.printStackTrace();
 			}
         });
+        signUpButton.setFont(Font.font("Helvetica", FontWeight.BOLD, 24));
+    	signUpButton.setText("Sign Up!");
+    	signUpButton.setMaxWidth(WIDTH * 0.2);
 
         VBox fieldStack = new VBox(20, 
         		greetings, 
@@ -690,12 +864,19 @@ public class AppState extends AbstractAppState {
         		signUpButton, 
         		errorDisplayLabel
         	);
-        fieldStack.setMaxWidth(WIDTH * 0.3);
+        fieldStack.setMaxWidth(WIDTH * 0.4);
+        fieldStack.setId("fieldStack");
+        fieldStack.setAlignment(Pos.TOP_CENTER);
         
-        VBox mainStack = new VBox(200, titleLabel, fieldStack);
+        VBox mainStack = new VBox(100, titleLabel, fieldStack);
         mainStack.setAlignment(Pos.TOP_CENTER);
+        mainStack.setId("mainStack");
         
         CURRENT_ROOT.getChildren().add(mainStack);
+        
+     // import stylesheets
+        CURRENT_ROOT.getStylesheets().add("//src/officeAutomation/stylesheets/styling.css");
+        CURRENT_ROOT.getStylesheets().add("//src/officeAutomation/stylesheets/styling_signup.css");
 	}
 	
 
@@ -724,10 +905,16 @@ public class AppState extends AbstractAppState {
 
 		VBox bodyStack = new VBox(20, patientTitleLabel, basicInfoLabel, healthRecordsLabel, visitsHistoryButton, addNewVisit);
 		bodyStack.setAlignment(Pos.CENTER);
+		bodyStack.setId("bodyStack");
 		
 		VBox mainStack = new VBox(100, topBar, bodyStack);
 		mainStack.setAlignment(Pos.TOP_CENTER);
+		mainStack.setId("mainStack");
 		CURRENT_ROOT.getChildren().add(mainStack);
+		
+		//stylesheets
+		CURRENT_ROOT.getStylesheets().add("//src/officeAutomation/stylesheets/styling.css");
+		CURRENT_ROOT.getStylesheets().add("//src/officeAutomation/stylesheets/styling_viewpatient.css");
 	}
 	
 	// the main view of the doctor side of the app
@@ -737,15 +924,20 @@ public class AppState extends AbstractAppState {
 		CURRENT_ROOT = sceneRoots.get(CURRENT_INDEX);
 		
 		HBox topBar = makeDoctorTopBar();
-		Label titleLabel = label("Welcome Back!", Font.font("Helvatica", FontWeight.BOLD, 30));
+		Label titleLabel = label("Welcome Back!", Font.font("Helvetica", FontWeight.BOLD, 30));
+		titleLabel.setPadding(new Insets(50, 0, 50, 0));
 
 		Button createNewVisit = button("createNewVisit", "Create New Visit", e -> {
 			customPatientEventHandler();
 		});
-
+		createNewVisit.setMaxWidth(WIDTH * 0.4);
+		createNewVisit.setFont(Font.font("Helvetica", 20));
+		
 		Button findAPatient = button("findAPatient", "Find a Patient", e -> {
 			customPatientEventHandler();
 		});
+		findAPatient.setMaxWidth(WIDTH * 0.4);
+		findAPatient.setFont(Font.font("Helvetica", 20));
 
 		Button findPharmacy = button("findPharmacy", "Find a Pharmacy", e -> {
 			navigateToScene(AppScene.DoctorPharmaciesListScene);
@@ -774,6 +966,9 @@ public class AppState extends AbstractAppState {
 				exception.printStackTrace();
 			}
 		});
+		findPharmacy.setMaxWidth(WIDTH * 0.4);
+		findPharmacy.setFont(Font.font("Helvetica", 20));
+		
 		Button messagingCenter = button("messagingCenter", "Messaging Center", e -> {
 			navigateToScene(AppScene.DoctorMessagingPortalScene);	
 			// load messages to present in messaging portal scene
@@ -788,16 +983,26 @@ public class AppState extends AbstractAppState {
 				exception.printStackTrace();
 			}
 		});
+		messagingCenter.setMaxWidth(WIDTH * 0.4);
+		messagingCenter.setFont(Font.font("Helvetica", 20));
 
 		HBox firstSet = new HBox(10, createNewVisit, findAPatient);
 		firstSet.setAlignment(Pos.CENTER);
+		firstSet.setId("bodyStack");
+		firstSet.setMaxWidth(WIDTH * 0.5);
 		HBox secondSet = new HBox(10, findPharmacy, messagingCenter);
 		secondSet.setAlignment(Pos.CENTER);
+		secondSet.setId("bodyStack");
+		secondSet.setMaxWidth(WIDTH * 0.5);
 
-        VBox mainStack = new VBox(100, topBar, titleLabel, firstSet, secondSet);
+        VBox mainStack = new VBox(topBar, titleLabel, firstSet, secondSet);
         mainStack.setAlignment(Pos.TOP_CENTER);
+        mainStack.setId("mainStack");
 		
 		CURRENT_ROOT.getChildren().add(mainStack);
+		
+		CURRENT_ROOT.getStylesheets().add("//src/officeAutomation/stylesheets/styling.css");
+		CURRENT_ROOT.getStylesheets().add("//src/officeAutomation/stylesheets/styling_mainpage.css");
 	}
 	
 	// the view that shows all the current patients that the office has
@@ -806,16 +1011,25 @@ public class AppState extends AbstractAppState {
 		CURRENT_ROOT = sceneRoots.get(CURRENT_INDEX);
 		
 		HBox topBar = makeDoctorTopBar();
-		Label titleLabel = label("Patient Search", Font.font("Helvatica", FontWeight.NORMAL, 30));
+		Label titleLabel = label("Patient Search", Font.font("Helvetica", FontWeight.NORMAL, 30));
 		titleLabel.setAlignment(Pos.TOP_LEFT);
 		
 		// updated in makeDoctorTopBar, in the event handler of the patients tab button
-		ListView<Button> patientsView = listview("patientsView"); 
+		ListView<Button> patientsView = listview("patientsView");
+		patientsView.setMaxWidth(WIDTH * 0.7);
 		
-        VBox mainStack = new VBox(50, topBar, titleLabel, patientsView);
+		VBox bodyStack = new VBox(50, titleLabel, patientsView);
+		bodyStack.setAlignment(Pos.TOP_CENTER);	
+		bodyStack.setId("bodyStack");
+        
+        VBox mainStack = new VBox(topBar, bodyStack);
         mainStack.setAlignment(Pos.TOP_CENTER);	
+        mainStack.setId("mainStack");
 		
 		CURRENT_ROOT.getChildren().add(mainStack);
+		
+		CURRENT_ROOT.getStylesheets().add("//src/officeAutomation/stylesheets/styling.css");
+		CURRENT_ROOT.getStylesheets().add("//src/officeAutomation/stylesheets/styling_patientlist.css");
 	}
 	
 	// this is the view that shows all the visits for a specific patient
@@ -831,10 +1045,15 @@ public class AppState extends AbstractAppState {
 		
 		VBox bodyStack = new VBox(20, titleLabel, visitsView);
 		bodyStack.setAlignment(Pos.TOP_CENTER);
+		bodyStack.setId("bodyStack");
 		
-		VBox mainStack = new VBox(200, topBarStack, bodyStack);
+		VBox mainStack = new VBox(100, topBarStack, bodyStack);
 		mainStack.setAlignment(Pos.TOP_CENTER);
+		mainStack.setId("mainStack");
 		CURRENT_ROOT.getChildren().add(mainStack);
+		
+		CURRENT_ROOT.getStylesheets().add("//src/officeAutomation/stylesheets/styling.css");
+		CURRENT_ROOT.getStylesheets().add("//src/officeAutomation/stylesheets/styling_visitationlog.css");
 	}
 	
 	// this is the view where the nurse inputs the findings from the patient visit
@@ -878,10 +1097,15 @@ public class AppState extends AbstractAppState {
 					saveVisitButton
 				);
 		bodyStack.setAlignment(Pos.TOP_CENTER);
+		bodyStack.setId("bodyStack");
 		
-		VBox mainStack = new VBox(100, topBar, bodyStack);
+		VBox mainStack = new VBox(50, topBar, bodyStack);
 		mainStack.setAlignment(Pos.TOP_CENTER);
+		mainStack.setId("mainStack");
 		CURRENT_ROOT.getChildren().add(mainStack);
+		
+		CURRENT_ROOT.getStylesheets().add("//src/officeAutomation/stylesheets/styling.css");
+		CURRENT_ROOT.getStylesheets().add("//src/officeAutomation/stylesheets/styling_newvisit.css");
 	}
 	
 	static void setupDoctorPharmaciesListScene() {
@@ -893,16 +1117,22 @@ public class AppState extends AbstractAppState {
 		Label titleLabel = label("Pharmacy List", Font.font("Helvetica", FontWeight.BOLD, 25));
 		Button addNew = navigationButton("addNewPharmacyButton", "Add New", AppScene.DoctorAddNewPharmacyScene);
 		ListView<Button> pharmaciesList = listview("pharmaciesList");
+		pharmaciesList.setMaxWidth(WIDTH * 0.7);
 		
 		VBox bodyStack = new VBox(5);
 		bodyStack.setAlignment(Pos.CENTER);
+		bodyStack.setId("bodyStack");
 		bodyStack.getChildren().addAll(
 				new HBox(50, titleLabel, addNew),
 				pharmaciesList
 		);
 
 		VBox mainStack = new VBox(50, topBar, bodyStack);
+		mainStack.setId("mainStack");
 		CURRENT_ROOT.getChildren().add(mainStack);
+
+		CURRENT_ROOT.getStylesheets().add("//src/officeAutomation/stylesheets/styling.css");
+		CURRENT_ROOT.getStylesheets().add("//src/officeAutomation/stylesheets/styling_pharmacylist.css");
 	}
 	
 	static void setupDoctorAddPharmacyScene() {
@@ -930,6 +1160,7 @@ public class AppState extends AbstractAppState {
 		addPharmStack.setAlignment(Pos.CENTER);
 		
 		VBox bodyStack = new VBox(50);
+		bodyStack.setId("bodyStack");
 		Label addNewPharmLabel = label("Adding New Pharmacy: ", Font.font("Helvetica", FontWeight.BOLD, 25));
 		addNewPharmLabel.setAlignment(Pos.CENTER);
 		HBox horizontalStack = new HBox(10, addPharmStack, actionStack);
@@ -939,9 +1170,14 @@ public class AppState extends AbstractAppState {
 				horizontalStack
 		);
 		bodyStack.setAlignment(Pos.TOP_CENTER);
+		bodyStack.setId("bodyStack");
 		
 		VBox mainStack = new VBox(50, topBar, bodyStack);
 		mainStack.setAlignment(Pos.TOP_CENTER);
+		mainStack.setId("mainStack");
 		CURRENT_ROOT.getChildren().add(mainStack);
+		
+		CURRENT_ROOT.getStylesheets().add("//src/officeAutomation/stylesheets/styling.css");
+		CURRENT_ROOT.getStylesheets().add("//src/officeAutomation/stylesheets/styling_addpharmacy.css");
 	}
 }

@@ -1,0 +1,32 @@
+/*
+COLOR HEX CODE REFERENCE:
+	dark blue (text, outlines): #22385B
+	medium blue: #ACCFEB
+	light blue: #DBF2FE
+	white: #ffffff
+	dark red (for notifs): #B23B2D
+	light red (for notifs): #CD6C60
+*/
+
+#loginStack {
+	-fx-padding: 20;
+	-fx-background-color: #FFFFFF;
+	-fx-background-radius: 10;
+	-fx-border-color: linear-gradient(to top left, #22385B, #274370);
+	-fx-border-width: 2;
+	-fx-border-radius: 10;
+}
+
+#signUpStack {
+	-fx-padding: 20;
+}
+
+#signUpButton {
+	-fx-background-color: linear-gradient(#ACCFEB, #5DA3DA);
+    -fx-text-fill: #FFFFFF;
+    -fx-border-width: 3;
+}
+
+#signUpPrompt {
+	-fx-text-fill: #22385B;
+}

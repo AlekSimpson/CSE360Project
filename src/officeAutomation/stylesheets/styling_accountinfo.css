@@ -1,0 +1,25 @@
+/*
+COLOR HEX CODE REFERENCE:
+	dark blue 2 (text, outlines): #22385B
+	dark blue 1 (gradients w/ dark blue 2): #274370
+	dark medium blue (placeholder text, attention grabbers, & such): #5DA3DA
+	light medium blue: #ACCFEB
+	light blue: #DBF2FE
+	white: #ffffff
+	dark red (for notifs): #B23B2D
+	light red (for notifs): #CD6C60
+*/
+
+#mainStack {
+	-fx-background-color: #ACCFEB;
+}
+
+#bodyStack {
+	-fx-background-radius: 0;
+	
+	-fx-border-width: 0;
+	-fx-border-radius: 0;
+	
+	-fx-alignment: center;
+	-fx-padding: 50;
+}
