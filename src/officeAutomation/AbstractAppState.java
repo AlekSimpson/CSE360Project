@@ -3,6 +3,7 @@ package officeAutomation;
 import java.io.IOException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -16,6 +17,7 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 
@@ -36,7 +38,8 @@ public class AbstractAppState {
 	int sceneAmount;
 	static Account currentlyLoggedIn;
 	static Message focusedMessage;
-	MedicalStaff staffAccount;
+	static Patient focusedPatient;
+	public static MedicalStaff staffAccount;
 	
 	protected AbstractAppState() {
 		eventHandler = new AppStateEventHandler();
@@ -191,6 +194,7 @@ public class AbstractAppState {
 			((TextField) getNode("subjectField")).setText("Re: " + focusedMessage.subject);
 		}
 
+		@SuppressWarnings("unchecked")
 		public void handleLogin() throws Exception {
 			clearError();
 			String fullname = ((TextField) getNode("fullnameField")).getText();
@@ -222,6 +226,29 @@ public class AbstractAppState {
 			try {
 				patientToLogin = new Patient(puid, password, false);			
 				loginSuccess(patientToLogin, AppScene.PatientMainViewScene); // log the user in
+				
+				//recentVisitsView
+				if (patientToLogin.visits != null && !patientToLogin.visits.isEmpty()) {
+					if (patientToLogin.visits.size() == 1) {
+						Button recentVisitsButton = new Button(); // just show the first two
+						recentVisitsButton.setText(patientToLogin.visits.get(0).date.toString());
+						((ListView<Button>) sceneNodesMapList.get(currentSceneID).get("recentVisitsView")).getItems().addAll(recentVisitsButton);
+					}
+					else if (patientToLogin.visits.size() == 2) {
+						Button[] recentVisitsButtons = new Button[2]; // just show the first two
+						Button current;
+						int i = 0;
+						for (Visit v : patientToLogin.visits) {
+							if (i == 2)
+								break;
+
+							current = new Button();
+							current.setText(v.date.toString());
+							recentVisitsButtons[i] = current;
+						}
+						((ListView<Button>) sceneNodesMapList.get(currentSceneID).get("recentVisitsView")).getItems().addAll(recentVisitsButtons);
+					}
+				}
 			}
 			catch (Exception e) {
 				ApplicationError err = new ApplicationError("Bad Password", "Please check that ALL your inputted credentials are correct");
@@ -250,6 +277,148 @@ public class AbstractAppState {
 			focusedMessage = null;
 
 			navigateToScene(AppScene.MessagingPortalScene);
+		}
+		
+		public void handleDocPatientButtonPress(String puid, String pHash) throws Exception {
+			navigateToScene(AppScene.DoctorViewPatientScene);
+			Patient p = new Patient(puid, "", true);
+			focusedPatient = p;
+			
+			((Button) getNode("visitsHistoryButton")).setOnAction(e -> {
+				try {
+					System.out.println("viewing patient visits");
+					handleDoctorVisitLogPressed(p);
+				} catch (Exception e1) {
+					e1.printStackTrace();
+				}
+			});
+			
+			((Label) getNode("patientTitleLabel")).setText("View Patient: " + p.getFullname());
+
+			String pn = String.valueOf(p.getPhoneNumber());
+			String basicInfoString = String.format(
+					"Basic Information:\nFullname: %s\nDate of Birth: %s\n Email: %s\n Phone Number: %s\n Physical Address: N/A\n", 
+					p.getFullname(), p.dateOfBirth.toString(), p.getEmail(), pn
+				);
+			((Label) getNode("basicInfoLabel")).setText(basicInfoString);
+		}
+		
+		@SuppressWarnings("unchecked")
+		public void handleDoctorVisitLogPressed(Patient p) throws Exception {
+			navigateToScene(AppScene.DoctorVisitationLogScene);
+			
+			System.out.println("patient name: " + p.getFullname());
+			if (p.visits != null && !p.visits.isEmpty()) {
+				System.out.println("1");
+				ArrayList<Button> buttons = new ArrayList<Button>();
+				Button currentButton;
+				for (Visit v : p.visits) {
+					System.out.println("found visit");
+					currentButton = new Button();
+					currentButton.setText(v.date.toString());
+					currentButton.setOnAction(e -> {});
+					buttons.add(currentButton);
+				}
+				Button[] copyButtons = new Button[buttons.size()];
+				int i = 0;
+				for (Button b : buttons) {
+					copyButtons[i] = b;
+					i++;
+				}
+				
+				((ListView<Button>) getNode("visitsView")).getItems().addAll(copyButtons);
+			}
+		}
+		
+
+		
+		public void handleAddingNewVisit(Patient p) throws Exception {
+			// TODO clearError();
+			
+			String dateForm = ((TextField) getNode("dateForm")).getText();
+			String weight = ((TextField) getNode("weightForm")).getText();
+			String height = ((TextField) getNode("heightForm")).getText(); 
+			String pulseRate = ((TextField) getNode("pulseRateForm")).getText();
+			String respRate = ((TextField) getNode("respForm")).getText();
+			String bodyTemp = ((TextField) getNode("bodyTempForm")).getText();
+			String bloodPress = ((TextField) getNode("bloodPressForm")).getText(); // systollic/diastollic
+			String allergies = ((TextField) getNode("allergiesForm")).getText();
+			String currentMeds = ((TextField) getNode("currentMedsForm")).getText(); // medname:dosage:pharmAddress
+			String otherConcerns = ((TextField) getNode("otherConcernsForm")).getText();
+			String findings = ((TextField) getNode("findingsForm")).getText();
+			String medName = ((TextField) getNode("medNameForm")).getText();
+			String medDoseForm = ((TextField) getNode("medDoseForm")).getText();
+			String pharmAddressForm = ((TextField) getNode("pharmAddressForm")).getText();
+			
+			if (!PatientDate.validateFormat(dateForm)) {
+				// TODO: DISPLAY ERROR, FAIL TO SUBMIT
+				System.out.println("date format incorrect");
+				return;
+			}
+			
+			if (!bloodPress.equals("") && !bloodPress.contains("/")) {
+				// TODO: DISPLAY ERROR, FAIL TO SUBMIT
+				System.out.println("Blood pressure input not formatted correctly");
+				return;
+			}
+			if (!currentMeds.equals("") && !currentMeds.toUpperCase().equals("NONE")) {
+				if (!currentMeds.contains(":")) {
+					// TODO: DISPLAY ERROR, FAIL TO ADD VISIT
+					System.out.println("medication not in correct format");
+					return;
+				}
+			}
+
+			if (
+				dateForm.equals("") ||
+				weight.equals("") ||
+				height.equals("") ||
+				bodyTemp.equals("") ||
+				bloodPress.equals("") ||
+				allergies.equals("") ||
+				findings.equals("")
+			) {
+				// display error, all forms must be filled out before submitting
+				return;
+			}
+			
+			String[] bloodDelimited = bloodPress.split("/");
+			int systollic = Integer.parseInt(bloodDelimited[0]);
+			int diastollic = Integer.parseInt(bloodDelimited[1]);
+			
+			int pr, rr;
+			try {
+				pr = Integer.parseInt(pulseRate);
+				rr = Integer.parseInt(respRate);			
+			}
+			catch (Exception ex)  {
+				// display error
+				return;
+			}
+			
+			Visit newVisit = new Visit(
+					0,
+					Double.parseDouble(weight),
+					Double.parseDouble(height),
+					Double.parseDouble(bodyTemp),
+					dateForm,
+					pr,
+					rr,
+					systollic, 
+					diastollic,
+					allergies,
+					currentMeds,
+					otherConcerns,
+					findings
+				);
+
+			if (p.visits == null) {
+				p.visits = new ArrayList<Visit>();
+			}
+			p.addVisit(newVisit);
+			p.save("", true);
+			navigateToScene(AppScene.DoctorVisitationLogScene);
+			System.out.println("visit added successfully");
 		}
 		
 		public void handleSignUp() throws Exception {
@@ -291,6 +460,31 @@ public class AbstractAppState {
 			displayError(err);
 		}
 		
+		@SuppressWarnings("unchecked")
+		public void patientNavigateToVisitsScene() {
+			navigateToScene(AppScene.VisitationLogScene);
+			Button[] visitsViewItems;
+			((ListView<Button>) sceneNodesMapList.get(currentSceneID).get("visitsView")).getItems().clear();
+			Patient patientLoggedIn = (Patient) currentlyLoggedIn;
+			ArrayList<Button> buttons = new ArrayList<Button>();
+			Button currButton;
+			for (Visit v : patientLoggedIn.visits) {
+				currButton = new Button();
+				currButton.setText(v.date.toString());
+				currButton.setOnAction(null);
+				buttons.add(currButton);
+			}
+			
+			Button[] buttonsCopy = new Button[buttons.size()];
+			int i = 0;
+			for (Button b : buttons) {
+				buttonsCopy[i] = b;
+				i++;
+			}
+			
+			((ListView<Button>) sceneNodesMapList.get(currentSceneID).get("visitsView")).getItems().addAll(buttonsCopy);
+		}
+		
 		protected void loginSuccess(Account loggedIn, AppScene destScene) {
 			currentlyLoggedIn = loggedIn;
 			((TextField) getNode("fullnameField")).setText("Fullname (Firstname Lastname)");
@@ -310,6 +504,137 @@ public class AbstractAppState {
 			
 			// return id
 			return buffer.toString();
+		}
+
+		public void handleAddNewVisit() {
+			navigateToScene(AppScene.DoctorAddNewVisitView);
+			
+			((Button) getNode("saveVisitButton")).setOnAction(e -> {
+				try {
+					handleAddingNewVisit(focusedPatient);
+				} catch (Exception e1) {
+					e1.printStackTrace();
+				}
+			});
+		}
+
+		public void handleAccountTabPressed() {
+			navigateToScene(AppScene.AccountInfoScene);
+			Patient p = (Patient) currentlyLoggedIn;
+			
+			((Label) getNode("emailLabel")).setText("Email: " + p.email);
+			((Label) getNode("phoneNumberLabel")).setText("Phone Number: " + p.phoneNumber);
+			((Label) getNode("addressLabel")).setText("Physical Address: "); // TODO
+			((Label) getNode("idLabel")).setText("Account ID: " + p.UID);
+			((Label) getNode("fullnameLabel")).setText("Fullname: " + p.getFullname());
+			((Label) getNode("ageLabel")).setText("Age: " + p.age);
+			((Label) getNode("dobLabel")).setText("Date of Birth: " + p.dateOfBirth);
+		}
+
+		public void handleSaveAccountInfo() {
+			// TODO display message when info is saved successfully
+			Patient p = (Patient) currentlyLoggedIn;
+			String[] fields = {
+					"emailField", "phoneNumberField",
+					"addressField", "firstnameField",
+					"lastnameField", "ageField"
+			};
+			ArrayList<String> fieldsToSave = new ArrayList<String>();
+			
+			String input;
+			for (String f : fields) {
+				input = ((TextField) getNode(f)).getText();
+				if (!input.equals("")) {
+					fieldsToSave.add(f);
+				}
+			}
+			
+			for (String f : fieldsToSave) {
+				input = ((TextField) getNode(f)).getText();
+				boolean success = saveField(p, f, input);
+				if (!success) {
+					// TODO DISPLAY ERROR
+					return;
+				}
+			}
+			
+			try {
+				p.save("", true);
+			} catch (Exception e) {
+				System.out.printf("Unable to save patient because:\n%s\n%s\n", e.toString(), e.getStackTrace());
+			}
+		}
+		
+		public boolean saveField(Patient p, String field, String value) {
+			switch (field) {
+			case "emailField":
+				p.setEmail(value);
+				break;
+			case "phoneNumberField":
+				if (value.length() != 10) {
+					return false;
+				}
+				p.setPhoneNumber(Long.parseLong(value));
+				break;
+			case "addressField":
+				// TODO
+				break;
+			case "firstnameField":
+				p.firstname = value;
+				break;
+			case "lastnameField":
+				p.lastname = value;
+				break;
+			case "ageField":
+				if (Integer.parseInt(value) >= 100 || Integer.parseInt(value) <= 0) {
+					return false;
+				}
+				p.age = Integer.parseInt(value);
+				break;
+			case "genderField":
+				break; // TODO
+			default:
+				return false;
+			}
+			
+			return true;
+		}
+
+		public void handleAddNewPharmacy() {
+			// TODO errors
+			System.out.println("curr id: " + currentSceneID);
+			String physAdd = ((TextField) getNode("physAddField")).getText();
+			String phoneNumber = ((TextField) getNode("phoneNumberField")).getText();
+			String email = ((TextField) getNode("emailField")).getText();
+			String chain = ((TextField) getNode("chainField")).getText();
+			
+			if (
+				physAdd.equals("") || 
+				phoneNumber.equals("") ||
+				email.equals("") ||
+				chain.equals("")
+			) {
+				// DISPLAY ERROR
+				return;
+			}
+			
+			long number;
+			try {
+				number = Long.parseLong(phoneNumber);			
+			}
+			catch (Exception exception) {
+				// DISPLAY ERROR
+				return;
+			}
+			
+			Pharmacy pharmacy = new Pharmacy(physAdd, chain, number, email);
+			try {
+				pharmacy.saveNewPharmacy();
+				navigateToScene(AppScene.DoctorMainViewScene);
+				System.out.println("saved new pharmacy");
+			} catch (IOException | ParseException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 }

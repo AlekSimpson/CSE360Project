@@ -71,14 +71,14 @@ public class MedicalStaff extends Account {
 		// isolate the patients object
 		JSONObject patientsObj = (JSONObject) rootObj.get("patients");
 
-		String patientString;
-		String[] delimitedPatient; // 0: patient uid, 1: account hash
-		for (int i = 0; i < patientsObj.size(); i++) {
-			patientString = patientsObj.toString();
-			patientString = patientString.replace("{", "");
-			patientString = patientString.replace("}", "");
-			delimitedPatient = patientString.split(":");
-			patients.put(delimitedPatient[0], new Patient(delimitedPatient[0], delimitedPatient[1]));
+		String ks;
+		String currentHash;
+		for (Object key : patientsObj.keySet()) {
+			ks = (String) key;
+			if (ks.equals("office"))
+				continue;
+			currentHash = (String) patientsObj.get(ks);
+			patients.put(ks, new Patient(ks, currentHash));
 		}
 	}
 	

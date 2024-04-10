@@ -30,6 +30,23 @@ public class PatientDate {
 		return String.format("%d/%d/%d", month, day, year);
 	}
 	
+	public static boolean validateFormat(String dateString) {
+		String[] delimited = dateString.split("/");
+		if (delimited.length != 3) {
+			return false;
+		}
+
+		try {
+			int d = Integer.parseInt(delimited[1]);
+			int m = Integer.parseInt(delimited[0]);
+			int y = Integer.parseInt(delimited[2]);		
+			return true;
+		}
+		catch (Exception e) {
+			return false;
+		}
+	}
+	
 	private void parseInputtedDate(String text) throws Exception {
 		String[] delimited = text.split("/");
 		if (delimited.length != 3) {

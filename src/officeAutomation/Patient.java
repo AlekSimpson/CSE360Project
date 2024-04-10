@@ -87,6 +87,10 @@ public class Patient extends Account {
 		return result;
 	}
 	
+	public String getFullname() {
+		return firstname + " " + lastname;
+	}
+	
 	public boolean userIsAuthentic(String password) throws InvalidKeySpecException {
 		if (accountHash == null) {
 			// cannot authenticate if user is not loaded
@@ -107,10 +111,9 @@ public class Patient extends Account {
 	}
 	
 	@SuppressWarnings("unchecked")
-	// TODO: write system to make it so that medical staff can also save changes to the records
 	public void save(String password, boolean isMedicalStaff) throws Exception {
 		// check password is correct
-		if (!userIsAuthentic(password)) {
+		if (!isMedicalStaff && !userIsAuthentic(password)) {
 			System.out.println("Incorrect password, cannot save patient data.");
 			return;
 		}
@@ -129,13 +132,8 @@ public class Patient extends Account {
 		if (!visits.isEmpty()) {
 			int i = 0;
 			for (Visit v : visits) {
-				JSONObject visitJson = new JSONObject();
-				visitJson.put("age", v.age);
-				visitJson.put("bodyTemp", v.bodyTemp);
-				visitJson.put("pulseRate", v.pulseRate);
-				visitJson.put("respirationRate", v.respirationRate);
-				visitJson.put("systollicPressure", v.bloodPressure.systollicPressure);
-				visitJson.put("diastollicPressure", v.bloodPressure.diastollicPressure);
+				System.out.println("iterating over visits");
+				JSONObject visitJson = v.toJSON();
 				visitsJson.put(String.format("%d", i), visitJson);
 				i++;
 			}		
@@ -153,13 +151,12 @@ public class Patient extends Account {
 		
 		// save the accountHash in a non encrypted file so we can load the account again later
 		saveAccountHash();
+		System.out.println("saved patient");
 	}
 	
 	// the patient ID needs to be passed in because this method will be called when the user is signing in and the stored ID will not be decrypted yet
-	// TODO: figure out a way to authenticate the password
 	public void loadPatientDataFromFile(String patientID, String password, boolean isMedicalStaff) throws Exception {
-		if (!userIsAuthentic(password)) {
-			// TODO: present error to user
+		if (!userIsAuthentic(password) && !isMedicalStaff) {
 			throw new Exception("Incorrect Password, cannot sign in");
 		}
 		currentDoctor = MedicalStaff.getInstance();
@@ -181,32 +178,21 @@ public class Patient extends Account {
 		UID = (String) json.get("UID");
 		email = (String) json.get("email");
 		accountHash = (String) json.get("accountHash");
-		phoneNumber = Integer.parseInt((String) json.get("phoneNumber"));
+		phoneNumber = Long.parseLong(String.valueOf(json.get("phoneNumber")));
+		visits = new ArrayList<Visit>();
 		
 		String dateStr = (String) json.get("dateOfBirth");
 		dateOfBirth = new PatientDate(dateStr);
 		age = Integer.parseInt((String) json.get("age"));
 		
-		// load records
+		// load visits
 		JSONObject visitObject = (JSONObject) json.get("visits");
 		for (int i = 0; i < visitObject.size(); i++) {
-			JSONObject visElement = (JSONObject) visitObject.get(String.format("%d", i));
-			int age = (int) visElement.get("age");
-			double weightInPounds = (double) visElement.get("weightInPounds");
-			double bodyTemp = (double) visElement.get("bodyTemp");
-			int pulseRate = (int) visElement.get("pulseRate");
-			int respirationRate = (int) visElement.get("respirationRate");
-			int systollicPressure = (int) visElement.get("systollicPressure");
-			int diastollicPressure = (int) visElement.get("diastollicPressure");
-			Visit pr = new Visit(
-					age, weightInPounds,
-					bodyTemp, pulseRate,
-					respirationRate, systollicPressure,
-					diastollicPressure
-				);
-			visits.add(pr);
-			i++;
+			Visit nextVisit = Visit.fromJSON(visitObject, i);
+			visits.add(nextVisit);
 		}
+		
+		System.out.println("loaded patient");
 	}
 	
 	@Override

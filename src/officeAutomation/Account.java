@@ -26,7 +26,7 @@ public class Account {
 	PatientDate dateOfBirth;
 	long phoneNumber;
 	int age;
-	ArrayList<Message> mailbox;
+	public ArrayList<Message> mailbox;
 	public boolean isMedStaff;
 	
 	public Account() {
@@ -94,7 +94,7 @@ public class Account {
 		return email;
 	}
 	
-	public void setPhoneNumber(int pn) {
+	public void setPhoneNumber(long pn) {
 		phoneNumber = pn;
 	}
 	

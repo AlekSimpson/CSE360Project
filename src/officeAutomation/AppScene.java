@@ -17,10 +17,16 @@ public enum AppScene {
 	// doctor views
 	DoctorMainViewScene(10),
 	DoctorPatientsListScene(11),
-	DoctorPharmaciesListScene(12);
+	DoctorViewPatientScene(12),
+	DoctorPharmaciesListScene(13),
+	DoctorAddNewPharmacyScene(14),
+    DoctorVisitationLogScene(15),
+    DoctorAddNewVisitView(16),
+    DoctorMessagingPortalScene(17),
+	DoctorComposeNewMessageScene(18);
 	
 	private final int value;
-	public static final int amount = 13;
+	public static final int amount = 19;
 	
 	AppScene(int v) {
 		value = v;
