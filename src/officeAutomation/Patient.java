@@ -207,5 +207,10 @@ public class Patient extends Account {
 	
 	public void addVisit(Visit visit) {
 		visits.add(visit);
+		
+		//Here are the patients visits
+		System.out.println("Patient's visits: ");
+		
+		
 	}
 }
