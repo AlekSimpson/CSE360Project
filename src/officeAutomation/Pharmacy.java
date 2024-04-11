@@ -18,6 +18,7 @@ public class Pharmacy {
 	public String chainName;
 	private final static String pharmaciesPath = "./src/officeAutomation/ApplicationData/pharmacies.json";
 	
+	//pharmacy creation function
 	public Pharmacy(String address, String name, long pn, String e) {
 		physicalAddress = address;
 		chainName = name;
@@ -40,6 +41,7 @@ public class Pharmacy {
 		return pharmacyObj;
 	}
 	
+	//saving a pharmacy to database
 	@SuppressWarnings("unchecked")
 	public void saveNewPharmacy() throws IOException, ParseException {
 		File pharmaciesFile = new File(pharmaciesPath);
@@ -57,8 +59,11 @@ public class Pharmacy {
 		String jsonText = rootObj.toString();
 		Path filepath = Paths.get(pharmaciesPath);
 		Files.write(filepath, jsonText.getBytes());
+		
+		 System.out.println("save pharmacy");
 	}
 	
+	//array list to create pharmacy
 	public static ArrayList<Pharmacy> fromJSON() throws IOException, ParseException {
 		ArrayList<Pharmacy> pharmacies = new ArrayList<Pharmacy>();
 		JSONParser parser = new JSONParser();
