@@ -109,6 +109,8 @@ public class Visit {
 		return visitObject;
 	}
 	
+	
+	
 	public static Visit fromJSON(JSONObject visitObject, int index) {
 		JSONObject visElement = (JSONObject) visitObject.get(String.format("%d", index));
 		int age = Integer.parseInt(String.valueOf(visElement.get("age")));
@@ -134,6 +136,10 @@ public class Visit {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		
+		//print out allergies
+		System.out.print(knownAllergies);
+		
 		
 		return visit;
 	}
